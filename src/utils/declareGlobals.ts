@@ -23,6 +23,7 @@ declare global {
     rooms: { [name: string]: RoomMemory };
     spawns: { [name: string]: SpawnMemory };
     missions: { [name: string]: MissionMemory };
+    empire: EmpireMemory;
   }
 
   interface MissionMemory {
@@ -33,14 +34,17 @@ declare global {
     children?: string[],
     spawnId?: Id<StructureSpawn>[],
     sourceId?: Id<Source>,
-    containerId?: Id<Structure>,
+    containerId?: Id<StructureContainer>,
     linkId?: Id<StructureLink>,
     extensionIds?: Id<StructureExtension>[],
     constructionPositions?: SimplePosition[],
     constructionSiteIds?: Id<ConstructionSite>[],
     path?: PathStep[],
+    pathToController?: PathStep[],
+    pathFromController?: PathStep[],
     creepRole?: creepRoles,
     ticksTillNextCheck?: number
+    ticksTillNextSpawn?: number
   }
 
   interface MissionCache {
@@ -52,11 +56,23 @@ declare global {
     extensions?: StructureExtension[]
   }
 
+  interface Room {
+    _my: Function,
+  }
+
+  interface EmpireMemory {
+    creepNum: number,
+    memoryVersion: number
+  }
+
+  interface RoomMemory {
+    avoidPositions: SimplePosition[],
+    tickTillSpawnMissions: number
+  }
+
   interface CreepMemory {
     role: number,
     missionId: string,
-    targetId?: string,
-    path?: PathStep[]
   }
 
   enum creepRoles {
@@ -68,7 +84,10 @@ declare global {
   }
   interface SpawnQueue {
     body: BodyPartConstant[],
-    opts: SpawnOptions
+    requiredSpawnStart: number,
+    repeat: boolean,
+    missionId: string,
+    role: number
   }
 
 

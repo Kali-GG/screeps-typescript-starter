@@ -1,14 +1,10 @@
 let actionResult = undefined;
 let target: Source | null = null;
 
-const harvest = (creep: Creep, sourceId: string) => {
+const harvestSource = (creep: Creep, sourceId: Id<Source>): void => {
   target = Game.getObjectById(sourceId);
-  if (target == null) {
-    return;
-  } //todo: this can only happen if id is not set correctly or altered. react somehow smart
-  if (target.energy == 0) {
-    return;
-  }
+  if (target == null) { return; } //todo: this can only happen if id is not set correctly or altered. react somehow smart
+  if (!target.energy) { return; }
 
   actionResult = creep.harvest(target);
 
@@ -97,4 +93,38 @@ const hasReachedFinalPathPosition = (creep: Creep, path: PathStep[]): boolean =>
   }
 }
 
-export { harvest, deposit, hasReachedFinalPathPosition }
+let constructionSite: ConstructionSite | null = null;
+
+const isBuildingThisTick = (creep: Creep): boolean => {
+  if (!Memory.missions[creep.memory.missionId].constructionSiteIds) { return false; }
+  if (!Memory.missions[creep.memory.missionId].constructionSiteIds?.length) { return false; }
+
+  // @ts-ignore
+  for (let i = Memory.missions[creep.memory.missionId].constructionSiteIds.length -1; i >= 0; i--) {
+    // @ts-ignore
+    constructionSite = Game.getObjectById(Memory.missions[creep.memory.missionId].constructionSiteIds[i]);
+    if (constructionSite && constructionSite.progressTotal) {
+      creep.build(constructionSite);
+      return true;
+    }
+    // @ts-ignore
+    Memory.missions[creep.memory.missionId].constructionSiteIds.splice(i, 1);
+  }
+  return false;
+}
+
+const isRepairingThisTick = (creep: Creep): boolean => {
+  if (!Memory.missions[creep.memory.missionId].containerId) { return false; }
+
+  // @ts-ignore
+  let container: Structure | null = Game.getObjectById(Memory.missions[creep.memory.missionId].containerId);
+
+  if (!container) { return false; }
+  if (container.structureType != STRUCTURE_CONTAINER) { return false; }
+
+  if (container.hits <= container.hitsMax * 0.9) { creep.repair(container); return true; }
+
+  return false;
+}
+
+export { harvestSource, deposit, hasReachedFinalPathPosition, isBuildingThisTick, isRepairingThisTick }
