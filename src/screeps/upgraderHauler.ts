@@ -8,7 +8,6 @@ import { hasReachedFinalPathPosition} from "./sharedCreepBehavior";
 
 let mission: MissionMemory;
 let container: StructureContainer | null;
-let containerId: Id<StructureContainer>;
 
 const upgraderHauler = (creep: Creep) => {
   if (!Memory.missions[creep.memory.missionId]) { return; }
@@ -18,20 +17,15 @@ const upgraderHauler = (creep: Creep) => {
   if (!mission.pathFromController) { return; }
   if (!mission.sourceId) { return; }
   if (!Memory.missions[mission.roomId + '_harvest_' + mission.sourceId]) { return; }
-  if (!Memory.missions[mission.roomId + '_harvest_' + mission.sourceId].containerId) { return; }
 
   if(creep.store[RESOURCE_ENERGY] == 0) {
-    // @ts-ignore
-    containerId = Memory.missions[mission.roomId + '_harvest_' + mission.sourceId].containerId;
-    // @ts-ignore
-    container = Game.getObjectById(containerId);
+    let harvestMission = Memory.missions[mission.roomId + '_harvest_' + mission.sourceId];
+    container = harvestMission.containerId != undefined ? Game.getObjectById(harvestMission.containerId) : null;
     if (!container || container.structureType != STRUCTURE_CONTAINER) { return; } //todo: look for energy to pick up at this location
 
     if(creep.withdraw(container, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
       if( creep.moveByPath(mission.pathFromController) == ERR_NOT_FOUND) {
-        console.log(`${creep.name} | ${creep.memory.missionId} mission.pathFromController ERR_NOT_FOUND`);
         if( creep.moveByPath(mission.path) == ERR_NOT_FOUND) {
-          console.log(`${creep.name} | ${creep.memory.missionId} mission.path ERR_NOT_FOUND`);
           creep.moveTo(mission.path[Math.min(5, mission.path.length-1)].x, mission.path[Math.min(5, mission.path.length-1)].y, {maxOps: 100});
         }
       }
@@ -39,20 +33,15 @@ const upgraderHauler = (creep: Creep) => {
     return;
   }
 
-  // @ts-ignore
-  containerId = Memory.missions[`${mission.roomId}_upgrader`].containerId;
-  // @ts-ignore
-  container = Game.getObjectById(containerId);
-  let isContainer = (container && container.structureType == STRUCTURE_CONTAINER);
-
-  if (!isContainer) {
+  let upgraderMission = Memory.missions[`${mission.roomId}_upgrader`];
+  container = upgraderMission.containerId != undefined ? Game.getObjectById(upgraderMission.containerId) : null;
+  if (!container || container.structureType != STRUCTURE_CONTAINER) {
     if (hasReachedFinalPathPosition(creep, mission.pathToController)) {
       creep.drop(RESOURCE_ENERGY);
     }
     return;
   }
 
-  // @ts-ignore
   let transferAction = creep.transfer(container, RESOURCE_ENERGY);
   if(transferAction == ERR_NOT_IN_RANGE) {
     if( creep.moveByPath(mission.pathToController) == ERR_NOT_FOUND) {

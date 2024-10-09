@@ -95,33 +95,32 @@ const hasReachedFinalPathPosition = (creep: Creep, path: PathStep[]): boolean =>
 }
 
 let constructionSite: ConstructionSite | null = null;
+let mission: MissionMemory;
 
 const isBuildingThisTick = (creep: Creep): boolean => {
-  if (!Memory.missions[creep.memory.missionId].constructionSiteIds) { return false; }
-  if (!Memory.missions[creep.memory.missionId].constructionSiteIds?.length) { return false; }
+  mission = Memory.missions[creep.memory.missionId];
+  if (!mission) { return false; }
+  if (mission.constructionSiteIds == undefined) { return false; }
 
-  // @ts-ignore
-  for (let i = Memory.missions[creep.memory.missionId].constructionSiteIds.length -1; i >= 0; i--) {
-    // @ts-ignore
-    constructionSite = Game.getObjectById(Memory.missions[creep.memory.missionId].constructionSiteIds[i]);
+
+  for (let i = mission.constructionSiteIds.length -1; i >= 0; i--) {
+    constructionSite = Game.getObjectById(mission.constructionSiteIds[i]);
     if (constructionSite && constructionSite.progressTotal) {
       creep.build(constructionSite);
       return true;
     }
-    // @ts-ignore
-    Memory.missions[creep.memory.missionId].constructionSiteIds.splice(i, 1);
+    mission.constructionSiteIds.splice(i, 1);
   }
   return false;
 }
 
 const isRepairingThisTick = (creep: Creep): boolean => {
-  if (!Memory.missions[creep.memory.missionId].containerId) { return false; }
+  mission = Memory.missions[creep.memory.missionId];
+  if (!mission) { return false; }
+  if (!mission.containerId) { return false; }
 
-  // @ts-ignore
-  let container: Structure | null = Game.getObjectById(Memory.missions[creep.memory.missionId].containerId);
-
-  if (!container) { return false; }
-  if (container.structureType != STRUCTURE_CONTAINER) { return false; }
+  let container: Structure | null = Game.getObjectById(mission.containerId);
+  if (!container || container.structureType != STRUCTURE_CONTAINER) { return false; }
 
   if (container.hits <= container.hitsMax * 0.9) { creep.repair(container); return true; }
 

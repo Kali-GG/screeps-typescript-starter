@@ -10,6 +10,9 @@ const baseName = 'roomBasics';
 let missionId: string;
 
 const initRoomBasics = (room: Room) => {
+  // this check is not necessary as we already check that the room is owned by us before invoking the function (which implies that there is a controller)
+  // however, we need to do the check to satisfy typescript and avoid ts-ignore
+  if (room.controller == undefined) { return; }
 
   missionId = room.name + '_' + baseName;
 
@@ -17,7 +20,6 @@ const initRoomBasics = (room: Room) => {
     id: missionId,
     roomId: room.name,
     type: baseName,
-    children: [],
     spawnId: [],
     path: [],
     pathToController: [],
@@ -31,7 +33,6 @@ const initRoomBasics = (room: Room) => {
   let upgraderPos = getAvoidPositionByType(room, `upgraderPosition`);
 
   let pathToUpgraderPosition = upgraderPos == null ?
-    // @ts-ignore
     findPath(room, spawnPos, room.controller.pos, {range: 3}) :
     findPath(room, spawnPos, upgraderPos, {range: 0});
 
@@ -70,7 +71,6 @@ const basicMissionStructureCheck = (missionId: string) => { //works for both min
   if (!mission.containerId || !Game.getObjectById(mission.containerId)) {
     let container = lookForSpecificStructureTypeAt(room, mission.path[mission.path.length-1].x, mission.path[mission.path.length-1].y, STRUCTURE_CONTAINER);
     if (container && container.structureType == STRUCTURE_CONTAINER) {
-
       // @ts-ignore
       mission.containerId = container.id;
     }

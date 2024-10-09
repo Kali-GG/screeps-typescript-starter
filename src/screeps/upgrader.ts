@@ -14,7 +14,6 @@ import {basicMissionStructureCheck} from "../missions/roomBasics";
 
 let mission: MissionMemory;
 let container: StructureContainer | null;
-let containerId: Id<StructureContainer>;
 
 const upgrader = (creep: Creep) => {
   if (!Memory.missions[creep.memory.missionId]) { return; }
@@ -30,23 +29,22 @@ const upgrader = (creep: Creep) => {
   }
 
   if(creep.store[RESOURCE_ENERGY] == 0) {
-    // @ts-ignore
-    containerId = mission.containerId;
-    container = Game.getObjectById(containerId);
+    container = mission.containerId != undefined ? Game.getObjectById(mission.containerId) : null;
     if (!container || container.structureType != STRUCTURE_CONTAINER || container.store[RESOURCE_ENERGY] == 0) {
-      let droppedEnergy = creep.pos.findClosestByRange(FIND_DROPPED_RESOURCES); //todo: could be some other ressource too
+
+      let droppedEnergy = creep.pos.findClosestByRange(FIND_DROPPED_RESOURCES, {
+        filter: function(object) {
+          return object.resourceType == RESOURCE_ENERGY;
+        }
+      });
       if (droppedEnergy) { creep.pickup(droppedEnergy); }
 
-      if (!Memory.missions[creep.memory.missionId].containerId &&
-        Memory.missions[creep.memory.missionId].constructionSiteIds != undefined &&
-        // @ts-ignore
-        Memory.missions[creep.memory.missionId].constructionSiteIds.length == 0) {
+      if (mission.constructionSiteIds != undefined && mission.constructionSiteIds.length == 0) {
         basicMissionStructureCheck(creep.memory.missionId);
       }
 
       return;
     }
-
     creep.withdraw(container, RESOURCE_ENERGY);
     return;
   }
@@ -55,7 +53,6 @@ const upgrader = (creep: Creep) => {
   if (isRepairingThisTick(creep)) { return; }
 
   if (creep.room.controller) { creep.upgradeController(creep.room.controller); }
-
 }
 
 export { upgrader }

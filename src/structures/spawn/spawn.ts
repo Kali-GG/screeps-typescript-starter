@@ -19,6 +19,11 @@ const newSpawnTick = (spawn: StructureSpawn) => {
 
   let spawnItem = filteredSpawnQueue[0];
 
+  if (!Memory.missions[spawnItem.missionId]) {
+    removeSpawnItemFromQueue(spawn, spawnItem);
+    return;
+  }
+
   let options: SpawnOptions = {
     memory: {
       missionId: spawnItem.missionId,
@@ -36,28 +41,23 @@ const newSpawnTick = (spawn: StructureSpawn) => {
   switch (spawnResult) {
     case 0: { // OK
       Memory.empire.creepNum = Memory.empire.creepNum + 1;
-      if (spawnItem.repeat == true) {
+      if (spawnItem.repeat) {
         spawnItem.requiredSpawnStart = Game.time + 1500;
         return;
       }
-      let index = spawn.memory.queue.indexOf(spawnItem);
-      if (index > -1) { // only splice array when item is found
-        spawn.memory.queue.splice(index, 1);
-      }
+      removeSpawnItemFromQueue(spawn, spawnItem);
       return;
     }
     case -1: { // ERR_NOT_OWNER
-      console.log(spawnResult)
+      console.log(`${spawn.name}: ERR_NOT_OWNER, ${JSON.stringify(spawnItem)}`);
       return;
     }
     case -3: { // ERR_NAME_EXISTS
-      console.log(spawnResult)
-      console.log(Memory.empire.creepNum)
       Memory.empire.creepNum = Memory.empire.creepNum + 1000;
       return;
     }
     case -4: { // ERR_BUSY
-      console.log(spawnResult)
+      console.log(`${spawn.name}: ERR_BUSY, ${JSON.stringify(spawnItem)}`);
       return;
     }
     case -6: { // ERR_NOT_ENOUGH_ENERGY
@@ -65,13 +65,11 @@ const newSpawnTick = (spawn: StructureSpawn) => {
       return;
     }
     case -10: { // ERR_INVALID_ARGS
-      //todo
-      console.log(spawnResult)
+      console.log(`${spawn.name}: ERR_INVALID_ARGS, ${JSON.stringify(spawnItem)}`);
       return;
     }
     case -14: { // ERR_RCL_NOT_ENOUGH
-      //todo
-      console.log(spawnResult)
+      console.log(`${spawn.name}: ERR_RCL_NOT_ENOUGH, ${JSON.stringify(spawnItem)}`);
       return;
     }
     default: {
@@ -98,72 +96,22 @@ const insertUpdateSpawnQueueItems = (missionId: string, spawn: StructureSpawn, a
       addToSpawnQueue(spawn, args);
     }
   }
-
-  // todo Remove items
 }
-
-/*
-const isSpawning_Deprecated = (spawn: StructureSpawn): boolean => {
-  if (spawn.spawning != null) { return true; }
-  if (!spawn.memory.queue) { spawn.memory.queue = []; }
-  if (spawn.memory.queue.length == 0) { return false; }
-
-
-
-  spawnResult = spawn.spawnCreep(
-    spawn.memory.queue[0].body,
-    spawn.name + '_' + Game.time,
-    spawn.memory.queue[0].opts
-  );
-
-  switch (spawnResult) {
-    case 0: { // OK
-      spawn.memory.queue.splice(0,1);
-      return true;
-    }
-    case -1: { // ERR_NOT_OWNER
-      console.log(spawnResult)
-      return false;
-    }
-    case -3: { // ERR_NAME_EXISTS
-      console.log(spawnResult)
-      return false;
-    }
-    case -4: { // ERR_BUSY
-      console.log(spawnResult)
-      return false;
-    }
-    case -6: { // ERR_NOT_ENOUGH_ENERGY
-      if (spawn.room.energyCapacityAvailable < getCostForBodyPartsArr(spawn.memory.queue[0].body)) { spawn.memory.queue.splice(0,1); }
-      return false;
-    }
-    case -10: { // ERR_INVALID_ARGS
-      //todo
-      console.log(spawnResult)
-      return false;
-    }
-    case -14: { // ERR_RCL_NOT_ENOUGH
-      //todo
-      console.log(spawnResult)
-      return false;
-    }
-    default: {
-      console.log('Error while spawning ' + spawn.memory.queue[0] + ' on spawn ' + spawn.id + ': (default case in switch statement reached. This should never happen)');
-      return false;
-    }
-  }
-}
-
- */
 
 const addToSpawnQueue = (spawn: StructureSpawn, item: SpawnQueue) => {
   spawn.memory.queue.push(item);
 }
 
+const removeSpawnItemFromQueue = (spawn: StructureSpawn, spawnItem: SpawnQueue) => {
+  let index = spawn.memory.queue.indexOf(spawnItem);
+  if (index > -1) { // only splice array when item is found
+    spawn.memory.queue.splice(index, 1);
+  }
+}
+
 const processSpawns = () => {
   for (let i in Game.spawns) {
     newSpawnTick(Game.spawns[i]);
-    //isSpawning_Deprecated(Game.spawns[i]);
   }
 }
 
