@@ -1,4 +1,6 @@
 import {defendRoom} from "./defend";
+import {visualizeBaseBuilding} from "./visualizeBaseBuilding";
+import {updateCostMatrix} from "../utils/findPath";
 
 Room.prototype._my = function(): boolean {
   if (!this.controller) { return false; }
@@ -10,23 +12,26 @@ const processRooms = () => {
   for (let i in Game.rooms) {
     if (!Game.rooms[i].controller || !Game.rooms[i].controller?.my) { continue; }
     defendRoom(Game.rooms[i]);
+    visualizeBaseBuilding(Game.rooms[i]);
   }
 }
 
 const pushPositionToAvoidPositionArr = (room: Room, pos: SimplePosition ): void => {
     if (!room._my()) { return; }
-    let filterResult = _.filter(room.memory.avoidPositions, (item) => { return item.x == pos.x && item.y == item.y });
+    let filterResult = _.filter(room.memory.avoidPositions, (item) => {
+      return item.x == pos.x && item.y == pos.y;
+    });
     if (filterResult.length == 0) {
       room.memory.avoidPositions.push(pos);
+      updateCostMatrix(room.name, pos, 200);
     }
 }
 
-const getAvoidPositionArrAsRoomPositions = (room: Room): RoomPosition[] => {
-  let arr: RoomPosition[] = [];
-  room.memory.avoidPositions.forEach( pos => {
-    arr.push(new RoomPosition(pos.x, pos.y, room.name));
-  });
-  return arr;
+const getAvoidPositionByType = (room: Room, type: string): RoomPosition | null => {
+  if (!room.memory.avoidPositions) { return null; }
+  let filterResult = _.filter(room.memory.avoidPositions, (item) => { return item.type == type });
+  if (filterResult.length > 0) { return new RoomPosition(filterResult[0].x, filterResult[0].y, room.name); }
+  return null;
 }
 
-export { processRooms, pushPositionToAvoidPositionArr, getAvoidPositionArrAsRoomPositions }
+export { processRooms, pushPositionToAvoidPositionArr, getAvoidPositionByType }

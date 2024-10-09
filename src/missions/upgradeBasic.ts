@@ -1,5 +1,4 @@
 import {insertUpdateSpawnQueueItems} from "../structures/spawn/spawn";
-import {lookForSpecificStructureTypeAt, lookForSpecificTypeConstructionSite} from "../utils/lookFor";
 
 const baseName = 'upgrader';
 let missionId: string;
@@ -8,15 +7,16 @@ const initUpgradeBasicMission = (room: Room, spawn: StructureSpawn, path: PathSt
 
   missionId = room.name + '_' + baseName;
 
-  if (!Memory.missions[missionId]) {
-    Memory.missions[missionId] = {
-      id: missionId,
-      roomId: room.name,
-      type: baseName,
-      spawnId: [spawn.id],
-      path: path,
-    };
-  }
+  Memory.missions[missionId] = {
+    id: missionId,
+    roomId: room.name,
+    type: baseName,
+    spawnId: [spawn.id],
+    path: path,
+    pathToController: [],
+    pathFromController: [],
+    constructionSiteIds: [],
+  };
 
   let args: SpawnQueue = {
     body: [WORK, WORK, WORK, CARRY, MOVE, MOVE, MOVE ],

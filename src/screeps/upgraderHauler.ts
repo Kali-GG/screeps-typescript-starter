@@ -11,9 +11,6 @@ let container: StructureContainer | null;
 let containerId: Id<StructureContainer>;
 
 const upgraderHauler = (creep: Creep) => {
-
-  //console.log(`we finally have a hauler (${creep.name}) : ${JSON.stringify(creep.memory)}`)
-
   if (!Memory.missions[creep.memory.missionId]) { return; }
   mission = Memory.missions[creep.memory.missionId];
   if (!mission.path) { return; }
@@ -32,8 +29,9 @@ const upgraderHauler = (creep: Creep) => {
 
     if(creep.withdraw(container, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
       if( creep.moveByPath(mission.pathFromController) == ERR_NOT_FOUND) {
+        console.log(`${creep.name} | ${creep.memory.missionId} mission.pathFromController ERR_NOT_FOUND`);
         if( creep.moveByPath(mission.path) == ERR_NOT_FOUND) {
-          if (creep.ticksToLive != undefined && creep.ticksToLive < 1400) { creep.suicide(); }
+          console.log(`${creep.name} | ${creep.memory.missionId} mission.path ERR_NOT_FOUND`);
           creep.moveTo(mission.path[Math.min(5, mission.path.length-1)].x, mission.path[Math.min(5, mission.path.length-1)].y, {maxOps: 100});
         }
       }
@@ -58,11 +56,7 @@ const upgraderHauler = (creep: Creep) => {
   let transferAction = creep.transfer(container, RESOURCE_ENERGY);
   if(transferAction == ERR_NOT_IN_RANGE) {
     if( creep.moveByPath(mission.pathToController) == ERR_NOT_FOUND) {
-      if (creep.ticksToLive != undefined && creep.ticksToLive < 1400) {
-        console.log(`(${creep.name}) issue with pathtocontroller ${mission.pathToController} - suicide`);
-        //creep.suicide();
-        return;
-      }
+      console.log(`${creep.name} | ${creep.memory.missionId} mission.pathToController ERR_NOT_FOUND`);
       creep.moveTo(mission.pathToController[Math.min(5, mission.pathToController.length-1)].x, mission.pathToController[Math.min(5, mission.pathToController.length-1)].y, {maxOps: 20});
     }
   }

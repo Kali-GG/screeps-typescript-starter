@@ -3,6 +3,10 @@ import {getCostForBodyPartsArr} from "../../utils/getCostForBodyPartsArr";
 let spawnResult = 0;
 let filteredSpawnQueue: SpawnQueue[];
 
+StructureSpawn.prototype._spawnPos = function(): RoomPosition {
+  return new RoomPosition(this.pos.x + 1, this.pos.y, this.room.name);
+}
+
 const newSpawnTick = (spawn: StructureSpawn) => {
   if (spawn.spawning != null) { return; }
   if (!spawn.memory.queue) { spawn.memory.queue = []; }
@@ -31,8 +35,8 @@ const newSpawnTick = (spawn: StructureSpawn) => {
 
   switch (spawnResult) {
     case 0: { // OK
+      Memory.empire.creepNum = Memory.empire.creepNum + 1;
       if (spawnItem.repeat == true) {
-        Memory.empire.creepNum ++;
         spawnItem.requiredSpawnStart = Game.time + 1500;
         return;
       }
@@ -48,6 +52,8 @@ const newSpawnTick = (spawn: StructureSpawn) => {
     }
     case -3: { // ERR_NAME_EXISTS
       console.log(spawnResult)
+      console.log(Memory.empire.creepNum)
+      Memory.empire.creepNum = Memory.empire.creepNum + 1000;
       return;
     }
     case -4: { // ERR_BUSY

@@ -27,7 +27,7 @@ const processCreeps = () => {
         break;
       }
       default: {
-        console.log('processing creep without matching role')
+        console.log(`${Game.creeps[i].name} processing creep without matching role`)
       }
     }
   }

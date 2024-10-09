@@ -1,15 +1,16 @@
 import {pushPositionToAvoidPositionArr} from "../rooms/rooms";
 
-const latestMemoryVersion = 1;
+const latestMemoryVersion = 3;
 
 const ensureSystemIntegrity = () => {
+  global.costMatrixCache = {};
   if (!Memory.missions) { Memory.missions = {}; }
   if (!Memory.empire) {
     Memory.empire = {creepNum: 0, memoryVersion: 0};
   }
 
   if (!Memory.empire.memoryVersion || Memory.empire.memoryVersion < latestMemoryVersion) {
-    Memory.empire = {creepNum: 0, memoryVersion: 1};
+    Memory.empire = {creepNum: 0, memoryVersion: latestMemoryVersion};
     Memory.missions = {};
     Memory.spawns = {};
     Memory.rooms = {};
@@ -23,7 +24,7 @@ const ensureSystemIntegrity = () => {
     ensureSpawnMemoryIntegrity(Game.spawns[i]);
     //todo: hardcoded to spawn right of spawn
     //sanity check could be removed if we trust that the arr is filled properly
-    pushPositionToAvoidPositionArr(Game.spawns[i].room, {x: Game.spawns[i].pos.x + 1, y: Game.spawns[i].pos.y});
+    pushPositionToAvoidPositionArr(Game.spawns[i].room, {x: Game.spawns[i].pos.x + 1, y: Game.spawns[i].pos.y, type: i});
     cleanSpawnQueue(Game.spawns[i]);
   }
 }

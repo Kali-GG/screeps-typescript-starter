@@ -39,12 +39,10 @@ declare global {
     extensionIds?: Id<StructureExtension>[],
     constructionPositions?: SimplePosition[],
     constructionSiteIds?: Id<ConstructionSite>[],
-    path?: PathStep[],
-    pathToController?: PathStep[],
-    pathFromController?: PathStep[],
+    path: PathStep[],
+    pathToController: PathStep[],
+    pathFromController: PathStep[],
     creepRole?: creepRoles,
-    ticksTillNextCheck?: number
-    ticksTillNextSpawn?: number
   }
 
   interface MissionCache {
@@ -79,6 +77,10 @@ declare global {
     miner
   }
 
+  interface StructureSpawn {
+    _spawnPos: Function,
+  }
+
   interface SpawnMemory {
     queue: SpawnQueue[]
   }
@@ -95,7 +97,8 @@ declare global {
   namespace NodeJS {
     interface Global {
       log: any;
-      missionCache: {[name: string]: MissionCache}
+      missionCache: {[name: string]: MissionCache},
+      costMatrixCache: {[name: string]: CostMatrix}
     }
   }
 }

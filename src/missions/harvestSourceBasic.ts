@@ -3,22 +3,23 @@ import {insertUpdateSpawnQueueItems} from "../structures/spawn/spawn";
 const baseName = 'harvest';
 let missionId: string;
 
-const spawnHarvestSourceBasicMission = (room: Room, source: Source, pathFromSpawn: PathStep[], spawn: StructureSpawn) => {
+const initHarvestSourceBasicMission = (room: Room, source: Source, pathFromSpawn: PathStep[], spawn: StructureSpawn) => {
 
   missionId = room.name + '_' + baseName + '_' + source.id;
 
-  if (!Memory.missions[missionId]) {
-    Memory.missions[missionId] = {
-      id: missionId,
-      type: baseName,
-      roomId: room.name,
-      spawnId: [spawn.id],
-      sourceId: source.id,
-      constructionPositions: getDepositPositions(room, source, pathFromSpawn),
-      constructionSiteIds: [],
-      path: pathFromSpawn,
-    };
-  }
+
+  Memory.missions[missionId] = {
+    id: missionId,
+    type: baseName,
+    roomId: room.name,
+    spawnId: [spawn.id],
+    sourceId: source.id,
+    //constructionPositions: getDepositPositions(room, source, pathFromSpawn),
+    constructionSiteIds: [],
+    path: pathFromSpawn,
+    pathFromController: [],
+    pathToController: []
+  };
 
   let args: SpawnQueue = {
     body: [WORK, WORK, WORK, CARRY, MOVE, MOVE, MOVE ],
@@ -31,7 +32,7 @@ const spawnHarvestSourceBasicMission = (room: Room, source: Source, pathFromSpaw
   insertUpdateSpawnQueueItems(missionId, spawn, args, 1);
 }
 
-const getDepositPositions = (room: Room, source: Source, pathFromSpawn: PathStep[]): SimplePosition[] => {
+const getDepositPositions = (room: Room, source: Source, pathFromSpawn: PathStep[]  | RoomPosition[]): SimplePosition[] => {
 
   let depositPositions: SimplePosition[] = [];
   if (pathFromSpawn.length < 3) { return depositPositions; } // todo: edge case not yet implemented. Will break stuff!
@@ -60,4 +61,4 @@ const getDepositPositions = (room: Room, source: Source, pathFromSpawn: PathStep
   return depositPositions;
 }
 
-export { spawnHarvestSourceBasicMission }
+export { initHarvestSourceBasicMission }

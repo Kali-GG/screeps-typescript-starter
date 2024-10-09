@@ -38,7 +38,7 @@ const allrounder = (creep) => {
 
   if (task == 'mining'){
     if(creep.harvest(target) == ERR_NOT_IN_RANGE) {
-      creep.moveTo(target, {visualizePathStyle: {stroke: '#ffaa00'}});
+      creep.moveTo(target);
     }
     if(creep.store[RESOURCE_ENERGY] == creep.store.getCapacity()) {
       target = undefined;
@@ -54,7 +54,7 @@ const allrounder = (creep) => {
     }
 
     if(creep.transfer(target, RESOURCE_ENERGY, energy2deliver) == ERR_NOT_IN_RANGE) {
-      creep.moveTo(target, {visualizePathStyle: {stroke: '#ffaa00'}});
+      creep.moveTo(target);
     }
     else {
       target = undefined;
@@ -63,7 +63,7 @@ const allrounder = (creep) => {
   }
   if (task == 'building'){
     if (creep.build(target) == ERR_NOT_IN_RANGE) {
-      creep.moveTo(target, {visualizePathStyle: {stroke: '#ffaa00'}});
+      creep.moveTo(target);
     }
     if (creep.carry.energy == 0) {
       task = undefined;
@@ -72,7 +72,7 @@ const allrounder = (creep) => {
   }
   if (task == 'upgrading'){
     if (creep.upgradeController(target) == ERR_NOT_IN_RANGE) {
-      creep.moveTo(target, {visualizePathStyle: {stroke: '#ffaa00'}});
+      creep.moveTo(target);
     }
     if (creep.carry.energy == 0) {
       task = undefined;

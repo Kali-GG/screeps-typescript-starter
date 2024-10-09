@@ -23,6 +23,7 @@ const miner = (creep: Creep) => {
   if (!Memory.missions[creep.memory.missionId].sourceId) { return; }
   if (!Memory.missions[creep.memory.missionId].path) { return; }
 
+
   // @ts-ignore
   if (!hasReachedFinalPathPosition(creep, Memory.missions[creep.memory.missionId].path)) { return; };
 

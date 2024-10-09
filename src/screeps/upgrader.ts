@@ -1,4 +1,5 @@
 import {isBuildingThisTick, isRepairingThisTick} from "./sharedCreepBehavior";
+import {basicMissionStructureCheck} from "../missions/roomBasics";
 
 /*
   1. If store.energy is empty
@@ -35,6 +36,14 @@ const upgrader = (creep: Creep) => {
     if (!container || container.structureType != STRUCTURE_CONTAINER || container.store[RESOURCE_ENERGY] == 0) {
       let droppedEnergy = creep.pos.findClosestByRange(FIND_DROPPED_RESOURCES); //todo: could be some other ressource too
       if (droppedEnergy) { creep.pickup(droppedEnergy); }
+
+      if (!Memory.missions[creep.memory.missionId].containerId &&
+        Memory.missions[creep.memory.missionId].constructionSiteIds != undefined &&
+        // @ts-ignore
+        Memory.missions[creep.memory.missionId].constructionSiteIds.length == 0) {
+        basicMissionStructureCheck(creep.memory.missionId);
+      }
+
       return;
     }
 
