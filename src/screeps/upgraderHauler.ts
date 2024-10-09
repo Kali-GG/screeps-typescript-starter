@@ -21,8 +21,7 @@ const upgraderHauler = (creep: Creep) => {
   if(creep.store[RESOURCE_ENERGY] == 0) {
     let harvestMission = Memory.missions[mission.roomId + '_harvest_' + mission.sourceId];
     container = harvestMission.containerId != undefined ? Game.getObjectById(harvestMission.containerId) : null;
-    if (!container || container.structureType != STRUCTURE_CONTAINER) { return; } //todo: look for energy to pick up at this location
-
+    if (!container || container.structureType != STRUCTURE_CONTAINER) { creep.suicide(); return; } //todo: look for energy to pick up at this location
     if(creep.withdraw(container, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
       if( creep.moveByPath(mission.pathFromController) == ERR_NOT_FOUND) {
         if( creep.moveByPath(mission.path) == ERR_NOT_FOUND) {

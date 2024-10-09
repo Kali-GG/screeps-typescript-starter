@@ -73,7 +73,6 @@ const hasReachedFinalPathPosition = (creep: Creep, path: PathStep[]): boolean =>
       return false;
     }
     case -5: { // ERR_NOT_FOUND, The specified path doesn't match the creep's location.
-      console.log(`${creep.name} path does not exist ${path}`)
       //if (creep.ticksToLive != undefined && creep.ticksToLive < 1400) { creep.suicide(); }
       creep.moveTo(path[Math.min(5, path.length-1)].x, path[Math.min(5, path.length-1)].y, {maxOps: 20});
       return false;

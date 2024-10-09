@@ -27,6 +27,21 @@ const ensureSystemIntegrity = () => {
     pushPositionToAvoidPositionArr(Game.spawns[i].room, {x: Game.spawns[i].pos.x + 1, y: Game.spawns[i].pos.y, type: i});
     cleanSpawnQueue(Game.spawns[i]);
   }
+
+  // Automatically delete memory of missing creeps
+  for (const name in Memory.creeps) {
+    if (!(name in Game.creeps)) {
+      delete Memory.creeps[name];
+    }
+  }
+
+  // Automatically delete memory of missing spawns
+  for (const name in Memory.spawns) {
+    if (!(name in Game.spawns)) {
+      delete Memory.spawns[name];
+    }
+  }
+
 }
 
 const ensureRoomMemoryIntegrity = (room: Room): void => {

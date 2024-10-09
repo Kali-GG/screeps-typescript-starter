@@ -1,5 +1,4 @@
 import {defendRoom} from "./defend";
-import {visualizeBaseBuilding} from "./visualizeBaseBuilding";
 import {updateCostMatrix} from "../utils/findPath";
 
 Room.prototype._my = function(): boolean {
@@ -10,9 +9,8 @@ Room.prototype._my = function(): boolean {
 
 const processRooms = () => {
   for (let i in Game.rooms) {
-    if (!Game.rooms[i].controller || !Game.rooms[i].controller?.my) { continue; }
+    if (!Game.rooms[i]._my()) { continue; }
     defendRoom(Game.rooms[i]);
-    visualizeBaseBuilding(Game.rooms[i]);
   }
 }
 

@@ -22,7 +22,7 @@ const miner = (creep: Creep) => {
   if (!hasReachedFinalPathPosition(creep, mission.path)) { return; }
 
   if(creep.store[RESOURCE_ENERGY] == creep.store.getCapacity()) {
-    if (mission.containerId && mission.constructionSiteIds != undefined && mission.constructionSiteIds.length == 0) {
+    if (!mission.containerId && mission.constructionSiteIds != undefined && mission.constructionSiteIds.length == 0) {
         basicMissionStructureCheck(creep.memory.missionId);
     }
     if (isBuildingThisTick(creep)) { return; }

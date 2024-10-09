@@ -30,6 +30,7 @@ const initHarvestSourceBasicMission = (room: Room, source: Source, pathFromSpawn
   };
 
   insertUpdateSpawnQueueItems(missionId, spawn, args, 1);
+
 }
 
 const getDepositPositions = (room: Room, source: Source, pathFromSpawn: PathStep[]  | RoomPosition[]): SimplePosition[] => {
