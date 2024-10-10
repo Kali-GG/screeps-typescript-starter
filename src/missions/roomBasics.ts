@@ -36,6 +36,8 @@ const initRoomBasics = (room: Room) => {
     findPath(room, spawnPos, room.controller.pos, {range: 3}) :
     findPath(room, spawnPos, upgraderPos, {range: 0});
 
+  //todo will cause troubles if path is too short
+
   let renewedUpgraderPos = new RoomPosition(pathToUpgraderPosition[pathToUpgraderPosition.length-1].x, pathToUpgraderPosition[pathToUpgraderPosition.length-1].y, room.name);
   pushPositionToAvoidPositionArr(room, {x: renewedUpgraderPos.x, y: renewedUpgraderPos.y, type:'upgraderPosition' });
 
@@ -62,7 +64,6 @@ const initRoomBasics = (room: Room) => {
 }
 
 const basicMissionStructureCheck = (missionId: string) => { //works for both miner & upgrader
-
   let mission = Memory.missions[missionId];
   if (!mission.path || mission.path.length == 0) { return; } //todo: should we kill the mission?
   let room = Game.rooms[mission.roomId];

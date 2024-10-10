@@ -28,7 +28,9 @@ const upgrader = (creep: Creep) => {
     return;
   }
 
+
   if(creep.store[RESOURCE_ENERGY] == 0) {
+
     container = mission.containerId != undefined ? Game.getObjectById(mission.containerId) : null;
     if (!container || container.structureType != STRUCTURE_CONTAINER || container.store[RESOURCE_ENERGY] == 0) {
 
@@ -39,7 +41,7 @@ const upgrader = (creep: Creep) => {
       });
       if (droppedEnergy) { creep.pickup(droppedEnergy); }
 
-      if (mission.constructionSiteIds != undefined && mission.constructionSiteIds.length == 0) {
+      if (mission.constructionSiteIds != undefined) {
         basicMissionStructureCheck(creep.memory.missionId);
       }
 
