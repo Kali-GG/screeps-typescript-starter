@@ -12,7 +12,7 @@ const newSpawnTick = (spawn: StructureSpawn) => {
   if (!spawn.memory.queue) { spawn.memory.queue = []; }
 
   filteredSpawnQueue = _.filter(spawn.memory.queue, (item) => {
-    return item.requiredSpawnStart && item.requiredSpawnStart <= Game.time // todo idea: should we add a check that we can afford the creep here?
+    return item.requiredSpawnStart && item.requiredSpawnStart <= Game.time && getCostForBodyPartsArr(item.body) <= spawn.room.energyAvailable;
   });
 
   if (filteredSpawnQueue.length == 0) { return; }
@@ -61,7 +61,7 @@ const newSpawnTick = (spawn: StructureSpawn) => {
       return;
     }
     case -6: { // ERR_NOT_ENOUGH_ENERGY
-      if (spawn.room.energyCapacityAvailable < getCostForBodyPartsArr(spawn.memory.queue[0].body)) { spawnItem.requiredSpawnStart = Game.time + 1500; return; }
+      if (spawn.room.energyCapacityAvailable < getCostForBodyPartsArr(spawnItem.body)) { spawnItem.requiredSpawnStart = Game.time + 1500; return; }
       return;
     }
     case -10: { // ERR_INVALID_ARGS

@@ -11,10 +11,23 @@ const allrounder = (creep) => {
   var target = Game.getObjectById(creep.memory.target);
 
   if (task == undefined || !target){
-    if(creep.carry.energy == 0) {
-      target = Game.getObjectById(Memory.missions[creep.memory.missionId].sourceId);
-      if (!target) { target = creep.pos.findClosestByPath(FIND_SOURCES);}
-      task = 'mining';
+    if(creep.store.getUsedCapacity() == 0) {
+      let droppedEnergy = creep.pos.findClosestByRange(FIND_DROPPED_RESOURCES, {
+        filter: function(object) {
+          return object.resourceType == RESOURCE_ENERGY && object.amount >= creep.store.getCapacity();
+        }
+      });
+
+      if (droppedEnergy) {
+        //console.log(`allrounder found energy ${droppedEnergy} | ${droppedEnergy.id}`)
+        target = droppedEnergy;
+        task = 'pickUp';
+      }
+      else {
+        target = Game.getObjectById(Memory.missions[creep.memory.missionId].sourceId);
+        if (!target) { target = creep.pos.findClosestByPath(FIND_SOURCES);}
+        task = 'mining';
+      }
     }
     else {
       target = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter: (structure) => {return (structure.structureType == STRUCTURE_EXTENSION || structure.structureType == STRUCTURE_TOWER) && structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0}});
@@ -36,6 +49,16 @@ const allrounder = (creep) => {
     }
   }
 
+  if (task == 'pickUp'){
+    if(creep.pickup(target) == ERR_NOT_IN_RANGE) {
+      creep.moveTo(target);
+    }
+    if(creep.store[RESOURCE_ENERGY] == creep.store.getCapacity()) {
+      target = undefined;
+      task = undefined;
+    }
+  }
+
   if (task == 'mining'){
     if(creep.harvest(target) == ERR_NOT_IN_RANGE) {
       creep.moveTo(target);
@@ -45,6 +68,7 @@ const allrounder = (creep) => {
       task = undefined;
     }
   }
+
   if (task == 'transporting'){
     if (target.energyCapacity - target.energy < creep.carry.energy) {
       var energy2deliver = target.energyCapacity - target.energy;
@@ -61,6 +85,7 @@ const allrounder = (creep) => {
       task = undefined;
     }
   }
+
   if (task == 'building'){
     if (creep.build(target) == ERR_NOT_IN_RANGE) {
       creep.moveTo(target);
@@ -70,6 +95,7 @@ const allrounder = (creep) => {
       target = undefined;
     }
   }
+
   if (task == 'upgrading'){
     if (creep.upgradeController(target) == ERR_NOT_IN_RANGE) {
       creep.moveTo(target);
