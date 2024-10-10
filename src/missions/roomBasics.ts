@@ -45,13 +45,9 @@ const initRoomBasics = (room: Room) => {
   sources.forEach(source => {
     let harvestPos = getAvoidPositionByType(room, `harvestPosition_${source.id}`);
 
-    if (source.id == '2df0d5ca2eb24664f7403392') {console.log(`harvestPos ${harvestPos}`)}
-
     let pathFromSpawn = harvestPos == null ?
       findPath(room, spawnPos, source.pos, {range: 1}) :
       findPath(room, spawnPos, harvestPos, {range: 0});
-
-    if (source.id == '2df0d5ca2eb24664f7403392') {console.log(`pathFromSpawn ${JSON.stringify(pathFromSpawn)}`)}
 
     pushPositionToAvoidPositionArr(room, {x: pathFromSpawn[pathFromSpawn.length-1].x, y: pathFromSpawn[pathFromSpawn.length-1].y, type:`harvestPosition_${source.id}` });
 

@@ -12,6 +12,7 @@ const initUpgraderHaulerBasicMission = (room: Room, source: Source, spawn: Struc
     room.memory.tickTillSpawnMissions = Math.min(room.memory.tickTillSpawnMissions, 1500);
     return;
   }
+
   // @ts-ignore
   let container: Structure = Game.getObjectById(Memory.missions[room.name + '_harvest_' + source.id].containerId);
 
@@ -31,17 +32,24 @@ const initUpgraderHaulerBasicMission = (room: Room, source: Source, spawn: Struc
   let dropOffPos = pathStepToRoomPosition(room, pathToController[pathToController.length-1]);
   let pathFromController = findPath(room, dropOffPos, pickUpPos, {range: 0});
 
-  Memory.missions[missionId] = {
-    id: missionId,
-    type: baseName,
-    roomId: room.name,
-    spawnId: [spawn.id],
-    sourceId: source.id,
-    path: path,
-    pathToController: pathToController,
-    pathFromController: pathFromController,
-    creepRole: 3, //todo: in SIM creepRoles.miner is crashing.
-  };
+  if (!Memory.missions[missionId]) {
+    Memory.missions[missionId] = {
+      id: missionId,
+      type: baseName,
+      roomId: room.name,
+      spawnId: [spawn.id],
+      sourceId: source.id,
+      path: path,
+      pathToController: pathToController,
+      pathFromController: pathFromController,
+      creepRole: 3, //todo: in SIM creepRoles.miner is crashing.
+    };
+  }
+
+  Memory.missions[missionId].spawnId = [spawn.id];
+  Memory.missions[missionId].path = path;
+  Memory.missions[missionId].pathToController = pathToController;
+  Memory.missions[missionId].pathFromController = pathFromController;
 
   let args: SpawnQueue = {
     body: [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE ],

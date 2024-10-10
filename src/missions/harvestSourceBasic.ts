@@ -7,19 +7,23 @@ const initHarvestSourceBasicMission = (room: Room, source: Source, pathFromSpawn
 
   missionId = room.name + '_' + baseName + '_' + source.id;
 
+  if (!Memory.missions[missionId]) {
+    Memory.missions[missionId] = {
+      id: missionId,
+      type: baseName,
+      roomId: room.name,
+      spawnId: [spawn.id],
+      sourceId: source.id,
+      //constructionPositions: getDepositPositions(room, source, pathFromSpawn),
+      constructionSiteIds: [],
+      path: pathFromSpawn,
+      pathFromController: [],
+      pathToController: []
+    };
+  }
 
-  Memory.missions[missionId] = {
-    id: missionId,
-    type: baseName,
-    roomId: room.name,
-    spawnId: [spawn.id],
-    sourceId: source.id,
-    //constructionPositions: getDepositPositions(room, source, pathFromSpawn),
-    constructionSiteIds: [],
-    path: pathFromSpawn,
-    pathFromController: [],
-    pathToController: []
-  };
+  Memory.missions[missionId].spawnId = [spawn.id];
+  Memory.missions[missionId].path = pathFromSpawn;
 
   let args: SpawnQueue = {
     body: [WORK, WORK, WORK, CARRY, MOVE, MOVE, MOVE ],
