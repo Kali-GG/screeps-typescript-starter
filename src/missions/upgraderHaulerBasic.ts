@@ -32,6 +32,13 @@ const initUpgraderHaulerBasicMission = (room: Room, source: Source, spawn: Struc
   let dropOffPos = pathStepToRoomPosition(room, pathToController[pathToController.length-1]);
   let pathFromController = findPath(room, dropOffPos, pickUpPos, {range: 0});
 
+  //todo: energy might be dropped off before the dropoff position is reached.
+  // in this case it can also happen that the position where energy is placed is not on the reverse path
+  // leading to a pathsearch
+  // while this is not ideal, we will leave it like this and come back to it later, maybe when we serialize the path
+  // one possible solution could be to not do several pathsearches from the beginning, but inverse the first path.
+  // this is probably even more cpu efficient
+
   if (!Memory.missions[missionId]) {
     Memory.missions[missionId] = {
       id: missionId,
