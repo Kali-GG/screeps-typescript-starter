@@ -19,7 +19,7 @@ const newSpawnTick = (spawn: StructureSpawn) => {
 
   let spawnItem = filteredSpawnQueue[0];
 
-  if (!Memory.missions[spawnItem.missionId]) {
+  if (!Memory.missions[spawnItem.missionId] || Memory.missions[spawnItem.missionId].roomId != spawn.room.name) {
     removeSpawnItemFromQueue(spawn, spawnItem);
     return;
   }
