@@ -4,6 +4,8 @@ const latestMemoryVersion = 3;
 
 const ensureSystemIntegrity = () => {
   global.costMatrixCache = {};
+  global.roomCache = {};
+
   if (!Memory.missions) { Memory.missions = {}; }
   if (!Memory.empire) {
     Memory.empire = {creepNum: 0, memoryVersion: 0};
@@ -41,7 +43,6 @@ const ensureSystemIntegrity = () => {
       delete Memory.spawns[name];
     }
   }
-
 }
 
 const ensureRoomMemoryIntegrity = (room: Room): void => {

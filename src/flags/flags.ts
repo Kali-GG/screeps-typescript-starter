@@ -1,5 +1,7 @@
 
 import {visualizeBaseBuilding} from "../rooms/visualizeBaseBuilding";
+import {distanceTransform, visualizeDistanceTransform} from "../rooms/baseBuilding/distanceTransform";
+import {floodFill, visualizeFloodFill} from "../rooms/baseBuilding/floodFill";
 
 const processFlags = () => {
   for (let i in Game.flags) {
@@ -21,6 +23,18 @@ const processFlags = () => {
         }
         room.memory.tickTillSpawnMissions = 1;
         Game.flags[i].remove();
+        break;
+      }
+      case 'distanceTransform': {
+        let room = Game.flags[i].room;
+        if (!room) { return; }
+        visualizeDistanceTransform(room, distanceTransform(room));
+        break;
+      }
+      case 'floodFill': {
+        let room = Game.flags[i].room;
+        if (!room) { return; }
+        visualizeFloodFill(room, floodFill(room, [Game.flags[i].pos]));
         break;
       }
       default: {

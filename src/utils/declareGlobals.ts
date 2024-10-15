@@ -81,13 +81,19 @@ declare global {
     role: number
   }
 
+  interface RoomCache {
+    emptyEnergyReservesArr: string[],
+    updateEmptyEnergyReservesArr: boolean
+  }
 
   // Syntax for adding properties to `global` (ex "global.log")
   namespace NodeJS {
     interface Global {
       log: any;
-      costMatrixCache: {[name: string]: CostMatrix}
+      costMatrixCache: {[name: string]: CostMatrix},
+      roomCache: {[name: string]: RoomCache},
     }
   }
 }
+
 

@@ -1,5 +1,6 @@
 import {defendRoom} from "./defend";
 import {updateCostMatrix} from "../utils/findPath";
+import {updateEmptyEnergyReservesArr} from "./resupplyLine";
 
 Room.prototype._my = function(): boolean {
   if (!this.controller) { return false; }
@@ -11,6 +12,7 @@ const processRooms = () => {
   for (let i in Game.rooms) {
     if (!Game.rooms[i]._my()) { continue; }
     defendRoom(Game.rooms[i]);
+    updateEmptyEnergyReservesArr(Game.rooms[i]);
   }
 }
 
@@ -32,4 +34,10 @@ const getAvoidPositionByType = (room: Room, type: string): RoomPosition | null =
   return null;
 }
 
-export { processRooms, pushPositionToAvoidPositionArr, getAvoidPositionByType }
+const globalRoom = (roomName: string) => {
+  if (!global.roomCache[roomName]) { global.roomCache[roomName] = {emptyEnergyReservesArr: [], updateEmptyEnergyReservesArr: true}; }
+  return global.roomCache[roomName];
+}
+
+
+export { processRooms, pushPositionToAvoidPositionArr, getAvoidPositionByType, globalRoom }

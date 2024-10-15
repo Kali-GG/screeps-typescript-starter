@@ -30,7 +30,7 @@ const allrounder = (creep) => {
       }
     }
     else {
-      target = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter: (structure) => {return (structure.structureType == STRUCTURE_EXTENSION || structure.structureType == STRUCTURE_TOWER) && structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0}});
+      target = creep.pos.findClosestByPath(FIND_STRUCTURES, {filter: (structure) => {return (structure.structureType == STRUCTURE_EXTENSION || structure.structureType == STRUCTURE_TOWER || structure.structureType == STRUCTURE_SPAWN) && structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0}});
       if (target){
         // found empty storage -- deliver energy
         task = 'transporting';
@@ -97,8 +97,11 @@ const allrounder = (creep) => {
   }
 
   if (task == 'upgrading'){
-    if (creep.upgradeController(target) == ERR_NOT_IN_RANGE) {
+    if (creep.pos.getRangeTo(target) > 2) { // we move closer than necessary to avoid blocking the supply lines
       creep.moveTo(target);
+    }
+    else {
+      creep.upgradeController(target);
     }
     if (creep.carry.energy == 0) {
       task = undefined;

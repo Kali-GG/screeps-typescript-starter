@@ -31,7 +31,7 @@ const initUpgradeBasicMission = (room: Room, spawn: StructureSpawn, path: PathSt
 
 const initialBodyCost = BODYPART_COST.work + BODYPART_COST.move + BODYPART_COST.carry;
 const additionalWorkMovePartsCost = BODYPART_COST.work + BODYPART_COST.move;
-const bodyBartCostBuffer = 0.8;
+const bodyBartCostBuffer = 1.0;
 
 const getBodyParts = (room: Room): BodyPartConstant[] => {
   let arr: BodyPartConstant[] = [WORK, CARRY, MOVE];

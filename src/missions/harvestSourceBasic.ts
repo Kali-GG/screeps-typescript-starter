@@ -26,7 +26,7 @@ const initHarvestSourceBasicMission = (room: Room, source: Source, pathFromSpawn
   Memory.missions[missionId].path = pathFromSpawn;
 
   let args: SpawnQueue = {
-    body: [WORK, WORK, WORK, CARRY, MOVE, MOVE, MOVE ],
+    body: getBodyParts(room),
     requiredSpawnStart: Game.time,
     repeat: true,
     missionId: missionId,
@@ -35,6 +35,25 @@ const initHarvestSourceBasicMission = (room: Room, source: Source, pathFromSpawn
 
   insertUpdateSpawnQueueItems(missionId, spawn, args, 1);
 
+}
+
+const initialBodyCost = BODYPART_COST.work + BODYPART_COST.move + BODYPART_COST.carry;
+const additionalWorkMovePartsCost = BODYPART_COST.work + BODYPART_COST.move;
+const bodyBartCostBuffer = 0.8;
+
+const getBodyParts = (room: Room): BodyPartConstant[] => {
+  let arr: BodyPartConstant[] = [WORK, CARRY, MOVE];
+
+  let maxNeededAdditionalSets = 4;
+  let requiredAdditionalBodyPartSets = Math.min(maxNeededAdditionalSets, Math.floor ( ((room.energyCapacityAvailable * bodyBartCostBuffer) - initialBodyCost) / additionalWorkMovePartsCost));
+
+  for (let i = 0; i < requiredAdditionalBodyPartSets; i++) {
+    arr.push(WORK, MOVE);
+  }
+
+  //if (requiredAdditionalBodyPartSets > 10) { arr.push(CARRY, CARRY); }
+
+  return arr;
 }
 
 const getDepositPositions = (room: Room, source: Source, pathFromSpawn: PathStep[]  | RoomPosition[]): SimplePosition[] => {

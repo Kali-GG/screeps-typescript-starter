@@ -1,4 +1,5 @@
 import {getCostForBodyPartsArr} from "../../utils/getCostForBodyPartsArr";
+import {globalRoom} from "../../rooms/rooms";
 
 let spawnResult = 0;
 let filteredSpawnQueue: SpawnQueue[];
@@ -41,6 +42,7 @@ const newSpawnTick = (spawn: StructureSpawn) => {
   switch (spawnResult) {
     case 0: { // OK
       Memory.empire.creepNum = Memory.empire.creepNum + 1;
+      globalRoom(spawn.room.name).updateEmptyEnergyReservesArr = true;
       if (spawnItem.repeat) {
         spawnItem.requiredSpawnStart = Game.time + 1500;
         return;
