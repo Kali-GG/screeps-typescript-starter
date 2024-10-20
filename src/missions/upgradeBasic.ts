@@ -43,7 +43,7 @@ const getBodyParts = (room: Room): BodyPartConstant[] => {
     arr.push(WORK, MOVE);
   }
 
-  if (requiredAdditionalBodyPartSets > 10) { arr.push(CARRY, CARRY); }
+  //if (requiredAdditionalBodyPartSets > 10) { arr.push(CARRY, CARRY); }
 
   return arr;
 }
