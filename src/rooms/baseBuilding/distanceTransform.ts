@@ -1,4 +1,3 @@
-
 /**
  * get distance trasform of a room
  * @param {string} roomName
@@ -11,8 +10,10 @@
  * https://sy-harabi.github.io/Automating-base-planning-in-screeps/
  * https://github.com/sy-harabi/screeps-utils/blob/33a0a406d86ed0a916d540340b3d07e3f5992065/utils.js#L10
  */
+import {getReverseCostMatrix} from "./getReverseCostMatrix";
 
-const distanceTransform = (room: Room): CostMatrix => {
+
+const distanceTransform = (room: Room, costMatrix: CostMatrix = getReverseCostMatrix(room)): CostMatrix => {
 
   const BOTTOM_LEFT = [
     { x: -1, y: 0 },
@@ -28,50 +29,31 @@ const distanceTransform = (room: Room): CostMatrix => {
     { x: 1, y: -1 },
   ];
 
-  let costs = new PathFinder.CostMatrix();
-
-  const terrain = new Room.Terrain(room.name);
-
-
-  for (let x = 0; x <= 49; x++) {
-    for (let y = 0; y <= 49; y++) {
-      if (terrain.get(x, y) === TERRAIN_MASK_WALL) {
-        costs.set(x, y, 0);
-        continue;
-      }
-      if (x < 1 || x > 48 || y < 1 || y > 48) {
-        costs.set(x, y, 0);
-        continue;
-      }
-      costs.set(x, y, 1 << 8);
-    }
-  }
-
+  console.log(`distanceTransform 25/16: ${costMatrix.get(25,16)}`)
+  console.log(`distanceTransform 26/16: ${costMatrix.get(26,16)}`)
 
   for (let x = 0; x <= 49; x++) {
     for (let y = 0; y <= 49; y++) {
       const nearDistances = BOTTOM_LEFT.map(
-        (vector) => costs.get(x + vector.x, y + vector.y) + 1 || 100
+        (vector) => costMatrix.get(x + vector.x, y + vector.y) + 1 || 100
       );
-      nearDistances.push(costs.get(x, y));
-      costs.set(x, y, Math.min(...nearDistances));
+      nearDistances.push(costMatrix.get(x, y));
+      costMatrix.set(x, y, Math.min(...nearDistances));
     }
   }
-
-
 
   for (let x = 49; x >= 0; x--) {
     for (let y = 49; y >= 0; y--) {
       const nearDistances = TOP_RIGHT.map(
-        (vector) => costs.get(x + vector.x, y + vector.y) + 1 || 100
+        (vector) => costMatrix.get(x + vector.x, y + vector.y) + 1 || 100
       );
-      nearDistances.push(costs.get(x, y));
+      nearDistances.push(costMatrix.get(x, y));
       const distance = Math.min(...nearDistances);
-      costs.set(x, y, distance);
+      costMatrix.set(x, y, distance);
     }
   }
 
-  return costs;
+  return costMatrix;
 }
 
 const visualizeDistanceTransform = (room: Room, costs: CostMatrix) => {

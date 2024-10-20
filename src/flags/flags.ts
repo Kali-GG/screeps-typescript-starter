@@ -2,6 +2,7 @@
 import {visualizeBaseBuilding} from "../rooms/visualizeBaseBuilding";
 import {distanceTransform, visualizeDistanceTransform} from "../rooms/baseBuilding/distanceTransform";
 import {floodFill, visualizeFloodFill} from "../rooms/baseBuilding/floodFill";
+import {visualizeRoomLayout} from "../rooms/baseBuilding/bunker";
 
 const processFlags = () => {
   for (let i in Game.flags) {
@@ -37,9 +38,15 @@ const processFlags = () => {
         visualizeFloodFill(room, floodFill(room, [Game.flags[i].pos]));
         break;
       }
+      case 'baseTest': {
+        let room = Game.flags[i].room;
+        if (!room) { return; }
+        visualizeRoomLayout(room);
+        break;
+      }
       default: {
         console.log(`Removed flag ${i} in room ${Game.flags[i].pos.roomName}`);
-        Game.flags[i].remove();
+        //Game.flags[i].remove();
       }
     }
   }
