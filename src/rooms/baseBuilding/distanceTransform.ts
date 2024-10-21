@@ -10,10 +10,10 @@
  * https://sy-harabi.github.io/Automating-base-planning-in-screeps/
  * https://github.com/sy-harabi/screeps-utils/blob/33a0a406d86ed0a916d540340b3d07e3f5992065/utils.js#L10
  */
-import {getReverseCostMatrix} from "./getReverseCostMatrix";
+import {getCostMatrix} from "./getCostMatrix";
 
 
-const distanceTransform = (room: Room, costMatrix: CostMatrix = getReverseCostMatrix(room)): CostMatrix => {
+const distanceTransform = (room: Room, costMatrix: CostMatrix = getCostMatrix(room, true)): CostMatrix => {
 
   const BOTTOM_LEFT = [
     { x: -1, y: 0 },
@@ -28,9 +28,6 @@ const distanceTransform = (room: Room, costMatrix: CostMatrix = getReverseCostMa
     { x: 1, y: 1 },
     { x: 1, y: -1 },
   ];
-
-  console.log(`distanceTransform 25/16: ${costMatrix.get(25,16)}`)
-  console.log(`distanceTransform 26/16: ${costMatrix.get(26,16)}`)
 
   for (let x = 0; x <= 49; x++) {
     for (let y = 0; y <= 49; y++) {

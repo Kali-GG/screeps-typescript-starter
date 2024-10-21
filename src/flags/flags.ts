@@ -45,8 +45,9 @@ const processFlags = () => {
         break;
       }
       default: {
+        if (Game.flags[i].color == COLOR_PURPLE) { return; } // those are used to give instructions for roomLayout
         console.log(`Removed flag ${i} in room ${Game.flags[i].pos.roomName}`);
-        //Game.flags[i].remove();
+        Game.flags[i].remove();
       }
     }
   }

@@ -15,7 +15,7 @@
  * Step 6 Defense
  */
 
-import {getReverseCostMatrix} from "./getReverseCostMatrix";
+import {getCostMatrix} from "./getCostMatrix";
 import {distanceTransform, visualizeDistanceTransform} from "./distanceTransform";
 import {floodFill} from "./floodFill";
 
@@ -31,18 +31,35 @@ import {floodFill} from "./floodFill";
  * defense ??
  */
 
+interface BaseLayoutPos {
+  xDelta: number,
+  yDelta: number,
+  structure: string
+}
+
+const BASE_LAYOUT: BaseLayoutPos[] = [
+  {xDelta: 0, yDelta: 0, structure: STRUCTURE_OBSERVER},
+]; //todo: complete list
+
 const getRoomLayout = (room: Room) => {
   if (!room.controller) { return; } // error: cannot build base in room without controller
-  let manualInstructionArr = findRelevantFlagsForRoomLayout(room);
-  let reverseCostMatrix = incorporateManualInstructionsInCostMatrix(getReverseCostMatrix(room), manualInstructionArr);
+  let manualInstructionArr = findRelevantFlagsForRoomLayout(room); //todo: instead of manual instructions, try to block space around controller, sources & mineral
+  let reverseCostMatrix = incorporateManualInstructionsInCostMatrix(getCostMatrix(room, true), manualInstructionArr);
   let distanceTransformCostMatrix = distanceTransform(room, reverseCostMatrix);
 
-  visualizeDistanceTransform(room, distanceTransformCostMatrix);
+  //visualizeDistanceTransform(room, distanceTransformCostMatrix);
+
   let potentialBaseCenters = getPotentialBaseCentersFromCostMatrix(distanceTransformCostMatrix, 6, room);
   if (potentialBaseCenters.length == 0) { return; } // error: no suitable base found
   let floodFilledCostMatrix = floodFill(room, [room.controller.pos]);
 
   let baseCenter = selectBaseCenter(potentialBaseCenters, floodFilledCostMatrix);
+
+  let costMatrix = setBaseLayout(baseCenter, getCostMatrix(room, false));
+
+  // todo: find spawn locations
+  // todo: find paths to controller, sources & mineral, reSupplyPaths
+  // todo: save everything
 
   return baseCenter;
 }
@@ -90,6 +107,17 @@ const selectBaseCenter = (potentialBaseCenters: RoomPosition[], floodFilledCostM
   });
 
   return closestPoint;
+}
+
+const setBaseLayout = (baseCenter: RoomPosition, costMatrix: CostMatrix): CostMatrix => {
+  BASE_LAYOUT.forEach(pos => {
+    if (pos.structure == STRUCTURE_CONTAINER) { return; }
+    costMatrix.set(
+      baseCenter.x + pos.xDelta,
+      baseCenter.y + pos.yDelta,
+      pos.structure == STRUCTURE_ROAD ? 0 : 255);
+  });
+  return costMatrix;
 }
 
 /**
