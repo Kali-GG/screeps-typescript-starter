@@ -38,20 +38,82 @@ interface BaseLayoutPos {
 }
 
 const BASE_LAYOUT: BaseLayoutPos[] = [
+
   {xDelta: 0, yDelta: 0, structure: STRUCTURE_OBSERVER},
+  /**
+   * roads
+   */
+  {xDelta: -6, yDelta: -2, structure: STRUCTURE_ROAD},
+  {xDelta: -6, yDelta: -1, structure: STRUCTURE_ROAD},
+  {xDelta: -6, yDelta: 0, structure: STRUCTURE_ROAD},
+  {xDelta: -6, yDelta: 1, structure: STRUCTURE_ROAD},
+  {xDelta: -6, yDelta: 2, structure: STRUCTURE_ROAD},
+  {xDelta: -5, yDelta: -3, structure: STRUCTURE_ROAD},
+  {xDelta: -5, yDelta: -2, structure: STRUCTURE_ROAD},
+  {xDelta: -5, yDelta: 3, structure: STRUCTURE_ROAD},
+  {xDelta: -4, yDelta: -4, structure: STRUCTURE_ROAD},
+  {xDelta: -4, yDelta: -1, structure: STRUCTURE_ROAD},
+  {xDelta: -4, yDelta: 4, structure: STRUCTURE_ROAD},
+  {xDelta: -3, yDelta: -5, structure: STRUCTURE_ROAD},
+  {xDelta: -3, yDelta: 0, structure: STRUCTURE_ROAD},
+  {xDelta: -3, yDelta: 5, structure: STRUCTURE_ROAD},
+  {xDelta: -2, yDelta: -6, structure: STRUCTURE_ROAD},
+  {xDelta: -2, yDelta: -1, structure: STRUCTURE_ROAD},
+  {xDelta: -2, yDelta: 1, structure: STRUCTURE_ROAD},
+  {xDelta: -2, yDelta: 5, structure: STRUCTURE_ROAD},
+  {xDelta: -2, yDelta: 6, structure: STRUCTURE_ROAD},
+  {xDelta: -1, yDelta: -6, structure: STRUCTURE_ROAD},
+  {xDelta: -1, yDelta: -2, structure: STRUCTURE_ROAD},
+  {xDelta: -1, yDelta: 2, structure: STRUCTURE_ROAD},
+  {xDelta: -1, yDelta: 4, structure: STRUCTURE_ROAD},
+  {xDelta: -1, yDelta: 6, structure: STRUCTURE_ROAD},
+  {xDelta: 0, yDelta: -6, structure: STRUCTURE_ROAD},
+  {xDelta: 0, yDelta: -3, structure: STRUCTURE_ROAD},
+  {xDelta: 0, yDelta: 3, structure: STRUCTURE_ROAD},
+  {xDelta: 0, yDelta: 6, structure: STRUCTURE_ROAD},
+  {xDelta: 1, yDelta: -6, structure: STRUCTURE_ROAD},
+  {xDelta: 1, yDelta: -4, structure: STRUCTURE_ROAD},
+  {xDelta: 1, yDelta: -2, structure: STRUCTURE_ROAD},
+  {xDelta: 1, yDelta: 2, structure: STRUCTURE_ROAD},
+  {xDelta: 1, yDelta: 6, structure: STRUCTURE_ROAD},
+  {xDelta: 2, yDelta: -6, structure: STRUCTURE_ROAD},
+  {xDelta: 2, yDelta: -5, structure: STRUCTURE_ROAD},
+  {xDelta: 2, yDelta: -1, structure: STRUCTURE_ROAD},
+  {xDelta: 2, yDelta: 1, structure: STRUCTURE_ROAD},
+  {xDelta: 2, yDelta: 6, structure: STRUCTURE_ROAD},
+  {xDelta: 3, yDelta: -5, structure: STRUCTURE_ROAD},
+  {xDelta: 3, yDelta: 0, structure: STRUCTURE_ROAD},
+  {xDelta: 3, yDelta: 5, structure: STRUCTURE_ROAD},
+  {xDelta: 4, yDelta: -4, structure: STRUCTURE_ROAD},
+  {xDelta: 4, yDelta: 1, structure: STRUCTURE_ROAD},
+  {xDelta: 4, yDelta: 4, structure: STRUCTURE_ROAD},
+  {xDelta: 5, yDelta: -3, structure: STRUCTURE_ROAD},
+  {xDelta: 5, yDelta: 2, structure: STRUCTURE_ROAD},
+  {xDelta: 5, yDelta: 3, structure: STRUCTURE_ROAD},
+  {xDelta: 6, yDelta: -2, structure: STRUCTURE_ROAD},
+  {xDelta: 6, yDelta: -1, structure: STRUCTURE_ROAD},
+  {xDelta: 6, yDelta: 0, structure: STRUCTURE_ROAD},
+  {xDelta: 6, yDelta: 1, structure: STRUCTURE_ROAD},
+  {xDelta: 6, yDelta: 2, structure: STRUCTURE_ROAD},
 ]; //todo: complete list
 
+//todo: once this works: rewrite the whole thing as a class
 const getRoomLayout = (room: Room) => {
   if (!room.controller) { return; } // error: cannot build base in room without controller
-  let manualInstructionArr = findRelevantFlagsForRoomLayout(room); //todo: instead of manual instructions, try to block space around controller, sources & mineral
-  let reverseCostMatrix = incorporateManualInstructionsInCostMatrix(getCostMatrix(room, true), manualInstructionArr);
+
+  let basicCostMatrix = getCostMatrix(room, false);
+  let reverseCostMatrix = getCostMatrix(room, true);
+
+  let manualInstructionArr = findRelevantFlagsForRoomLayout(room);
+  reverseCostMatrix = incorporateManualInstructionsInCostMatrix( reverseCostMatrix, manualInstructionArr);
+  reverseCostMatrix = reserveCriticalEconomyAreas(room, reverseCostMatrix);
   let distanceTransformCostMatrix = distanceTransform(room, reverseCostMatrix);
 
   //visualizeDistanceTransform(room, distanceTransformCostMatrix);
 
   let potentialBaseCenters = getPotentialBaseCentersFromCostMatrix(distanceTransformCostMatrix, 6, room);
   if (potentialBaseCenters.length == 0) { return; } // error: no suitable base found
-  let floodFilledCostMatrix = floodFill(room, [room.controller.pos]);
+  let floodFilledCostMatrix = floodFill(room, getRoomPositionArrOfPotentialUpgradingSpots(room, basicCostMatrix));
 
   let baseCenter = selectBaseCenter(potentialBaseCenters, floodFilledCostMatrix);
 
@@ -82,6 +144,46 @@ const incorporateManualInstructionsInCostMatrix = (costMatrix: CostMatrix, instr
     if (flag.secondaryColor == COLOR_YELLOW) { costMatrix.set(flag.pos.x, flag.pos.y, 0); }
   });
   return costMatrix;
+}
+
+const reserveCriticalEconomyAreas = (room: Room, costMatrix: CostMatrix, controllerRadius: number = 2, sourceRadius: number = 1, mineralRadius: number = 1): CostMatrix => {
+  if (!room.controller) { return costMatrix; }
+
+  costMatrix = reserveTiles(costMatrix, room.controller.pos, controllerRadius);
+
+  room.find(FIND_SOURCES).forEach(source => {
+    costMatrix = reserveTiles(costMatrix, source.pos, sourceRadius);
+  });
+
+  room.find(FIND_MINERALS).forEach(source => {
+    costMatrix = reserveTiles(costMatrix, source.pos, mineralRadius);
+  });
+
+  return costMatrix;
+}
+
+const reserveTiles = (costMatrix: CostMatrix ,pos: RoomPosition, radius: number): CostMatrix => {
+  for (let xDelta = - radius; xDelta <= radius; xDelta++) {
+    for (let yDelta = - radius; yDelta <= radius; yDelta++) {
+      costMatrix.set(pos.x + xDelta, pos.y + yDelta, 0);
+    }
+  }
+  return costMatrix;
+}
+
+const getRoomPositionArrOfPotentialUpgradingSpots = (room: Room, costMatrix: CostMatrix): RoomPosition[] => {
+  let arr: RoomPosition[] = [];
+
+  if (!room.controller) { return arr; }
+
+  for (let xDelta = - 3; xDelta <= 3; xDelta++) {
+    for (let yDelta = - 3; yDelta <= 3; yDelta++) {
+      if (costMatrix.get(room.controller.pos.x + xDelta, room.controller.pos.y + yDelta) < 255) {
+        arr.push(new RoomPosition(room.controller.pos.x + xDelta, room.controller.pos.y + yDelta, room.name)) ;
+      }
+    }
+  }
+  return arr;
 }
 
 const getPotentialBaseCentersFromCostMatrix = (costMatrix: CostMatrix, baseSize: number, room: Room): RoomPosition[] => {
@@ -135,11 +237,27 @@ const setBaseLayout = (baseCenter: RoomPosition, costMatrix: CostMatrix): CostMa
 
 const visualizeRoomLayout = (room: Room) => {
   let baseCenter = getRoomLayout(room);
-  if (!baseCenter) { return; }
+  if (baseCenter == undefined) { return; }
   const roomVisual = new RoomVisual(room.name);
   roomVisual.rect(baseCenter.x - 0.5, baseCenter.y - 0.5, 1, 1, {
     fill: 'purple',
     opacity: 0.4,
+  });
+
+  BASE_LAYOUT.forEach( spot => {
+    switch (spot.structure) {
+      case (STRUCTURE_ROAD): {
+        if (baseCenter == undefined) { return; }
+        roomVisual.rect(baseCenter.x + spot.xDelta - 0.5, baseCenter.y + spot.yDelta - 0.5, 1, 1, {
+          fill: 'green',
+          opacity: 0.4,
+        });
+        break;
+      }
+      default: {
+
+      }
+    }
   });
 }
 
