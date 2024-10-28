@@ -2,7 +2,7 @@
 import {visualizeBaseBuilding} from "../rooms/visualizeBaseBuilding";
 import {distanceTransform, visualizeDistanceTransform} from "../rooms/baseBuilding/distanceTransform";
 import {floodFill, visualizeFloodFill} from "../rooms/baseBuilding/floodFill";
-import {visualizeRoomLayout} from "../rooms/baseBuilding/bunker";
+import {BunkerBaseLayout, visualizeRoomLayout} from "../rooms/baseBuilding/bunker";
 
 const processFlags = () => {
   for (let i in Game.flags) {
@@ -41,7 +41,9 @@ const processFlags = () => {
       case 'baseTest': {
         let room = Game.flags[i].room;
         if (!room) { return; }
-        visualizeRoomLayout(room);
+        //visualizeRoomLayout(room);
+        let baseLayout = new BunkerBaseLayout(room);
+        baseLayout.visualize();
         break;
       }
       default: {

@@ -23,8 +23,8 @@ import {floodFill} from "./floodFill";
  * getCostMatrix()
  * iterate through flags & set costMatrix
  * distanceTransform
- * Iterate through resulting costmatrix to push positions into potentialBaseCenters[]
- * floodfill From: UpgradeLocation, To: potentialBaseCenters[]
+ * Iterate through resulting costMatrix to push positions into potentialBaseCenters[]
+ * floodFill From: UpgradeLocation, To: potentialBaseCenters[]
  * select closest base
  * place virtual structures
  * calc paths to upgradePos, miningPositions
@@ -96,6 +96,103 @@ const BASE_LAYOUT: BaseLayoutPos[] = [
   {xDelta: 6, yDelta: 1, structure: STRUCTURE_ROAD},
   {xDelta: 6, yDelta: 2, structure: STRUCTURE_ROAD},
 ]; //todo: complete list
+
+class BunkerBaseLayout {
+  room: Room;
+  controllerPos: RoomPosition;
+  costMatrix: CostMatrix;
+  reservedControllerPositions: RoomPosition[];
+  reservedSourcePositions: RoomPosition[][];
+  baseCenter: RoomPosition;
+
+  complete: boolean;
+
+  constructor (room: Room, loadFromMemory: boolean = false) {
+    this.complete = false;
+    this.room = room;
+    this.controllerPos = this.baseCenter = room.controller ? room.controller.pos : new RoomPosition(25,25,room.name);
+    this.costMatrix  = new PathFinder.CostMatrix;
+    this.reservedControllerPositions = [];
+    this.reservedSourcePositions = [];
+
+    this.complete = loadFromMemory ? this.loadFromMemory() : this.new(room);
+  }
+
+  new(room: Room): boolean {
+    this.costMatrix = getCostMatrix(room, false);
+    this.reservedControllerPositions = this.getReservedTiles(3, this.controllerPos, this.costMatrix);
+    room.find(FIND_SOURCES).forEach( (source, index) => {
+      this.reservedSourcePositions.push(this.getReservedTiles(1, source.pos, this.costMatrix));
+    });
+
+    if (!this.setBaseCenter()) { return false; }
+
+    return true;
+  }
+
+  addReservedPositionArrToCostMatrix(costMatrix: CostMatrix, positions: RoomPosition[]): CostMatrix {
+    positions.forEach( pos => {
+      costMatrix.set(pos.x, pos.y, 0);
+    });
+    return costMatrix;
+  }
+
+  setBaseCenter(): boolean {
+
+    let reverseCostMatrix = getCostMatrix(this.room, true);
+    reverseCostMatrix = this.addReservedPositionArrToCostMatrix(reverseCostMatrix, this.reservedControllerPositions);
+    this.reservedSourcePositions.forEach( arr => { reverseCostMatrix = this.addReservedPositionArrToCostMatrix(reverseCostMatrix, arr); });
+
+    let distanceTransformCostMatrix = distanceTransform(this.room, reverseCostMatrix);
+    let potentialBaseCenters = getPotentialBaseCentersFromCostMatrix(distanceTransformCostMatrix, 6, this.room);
+    if (potentialBaseCenters.length == 0) { return false; } // error: no suitable base found
+    let floodFilledCostMatrix = floodFill(this.room, getRoomPositionArrOfPotentialUpgradingSpots(this.room, this.costMatrix));
+
+    this.baseCenter = selectBaseCenter(potentialBaseCenters, floodFilledCostMatrix);
+    return true;
+  }
+
+  loadFromMemory() {
+    //todo: implement
+    return false;
+  }
+
+  visualize() {
+    const roomVisual = new RoomVisual(this.room.name);
+    roomVisual.rect(this.baseCenter.x - 0.5, this.baseCenter.y - 0.5, 1, 1, {
+      fill: 'purple',
+      opacity: 0.4,
+    });
+
+    BASE_LAYOUT.forEach( spot => {
+      switch (spot.structure) {
+        case (STRUCTURE_ROAD): {
+          if (this.baseCenter == undefined) { return; }
+          roomVisual.rect(this.baseCenter.x + spot.xDelta - 0.5, this.baseCenter.y + spot.yDelta - 0.5, 1, 1, {
+            fill: 'green',
+            opacity: 0.4,
+          });
+          break;
+        }
+        default: {
+
+        }
+      }
+    });
+  }
+
+  getReservedTiles (range: number = 3, pos: RoomPosition, costMatrix: CostMatrix): RoomPosition[] {
+    let arr: RoomPosition[] = [];
+
+    for (let xDelta = - range; xDelta <= range; xDelta++) {
+      for (let yDelta = - range; yDelta <= range; yDelta++) {
+        if (costMatrix.get(pos.x + xDelta, pos.y + yDelta) < 255) { arr.push(new RoomPosition(pos.x + xDelta, pos.y + yDelta, pos.roomName)); }
+      }
+    }
+
+    return arr;
+  }
+}
 
 //todo: once this works: rewrite the whole thing as a class
 const getRoomLayout = (room: Room) => {
@@ -261,4 +358,4 @@ const visualizeRoomLayout = (room: Room) => {
   });
 }
 
-export {visualizeRoomLayout}
+export {visualizeRoomLayout, BunkerBaseLayout}
