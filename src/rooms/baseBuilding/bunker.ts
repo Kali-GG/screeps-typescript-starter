@@ -16,7 +16,7 @@
  */
 
 import {getCostMatrix} from "./getCostMatrix";
-import {distanceTransform, visualizeDistanceTransform} from "./distanceTransform";
+import {distanceTransform} from "./distanceTransform";
 import {floodFill} from "./floodFill";
 
 /**
@@ -31,70 +31,105 @@ import {floodFill} from "./floodFill";
  * defense ??
  */
 
-interface BaseLayoutPos {
-  xDelta: number,
-  yDelta: number,
+interface StructurePos {
+  x: number,
+  y: number,
   structure: string
 }
 
-const BASE_LAYOUT: BaseLayoutPos[] = [
+const BASE_LAYOUT: StructurePos[] = [
 
-  {xDelta: 0, yDelta: 0, structure: STRUCTURE_OBSERVER},
+  /**
+   * Spawn
+   */
+  {x: 0, y: -2, structure: STRUCTURE_SPAWN},
+  {x: 0, y: 2, structure: STRUCTURE_SPAWN},
+  {x: 2, y: 0, structure: STRUCTURE_SPAWN},
+
+  /**
+   *  Storage
+   */
+  {x: -2, y: 0, structure: STRUCTURE_STORAGE},
+
+  /**
+   * Terminal
+   */
+  {x: -1, y: -1, structure: STRUCTURE_TERMINAL},
+
+  /**
+   * Link
+   */
+  {x: -1, y: 0, structure: STRUCTURE_LINK},
+
+  /**
+   * Observer
+   */
+  {x: 0, y: 0, structure: STRUCTURE_OBSERVER},
+
+  /**
+   * Extension
+   */
+  {x: -6, y: -1, structure: STRUCTURE_EXTENSION},
+  {x: -6, y: 0, structure: STRUCTURE_EXTENSION},
+  {x: -6, y: 1, structure: STRUCTURE_EXTENSION},
+  {x: -6, y: 2, structure: STRUCTURE_EXTENSION},
+  {x: -5, y: -1, structure: STRUCTURE_EXTENSION},
+
   /**
    * roads
    */
-  {xDelta: -6, yDelta: -2, structure: STRUCTURE_ROAD},
-  {xDelta: -6, yDelta: -1, structure: STRUCTURE_ROAD},
-  {xDelta: -6, yDelta: 0, structure: STRUCTURE_ROAD},
-  {xDelta: -6, yDelta: 1, structure: STRUCTURE_ROAD},
-  {xDelta: -6, yDelta: 2, structure: STRUCTURE_ROAD},
-  {xDelta: -5, yDelta: -3, structure: STRUCTURE_ROAD},
-  {xDelta: -5, yDelta: -2, structure: STRUCTURE_ROAD},
-  {xDelta: -5, yDelta: 3, structure: STRUCTURE_ROAD},
-  {xDelta: -4, yDelta: -4, structure: STRUCTURE_ROAD},
-  {xDelta: -4, yDelta: -1, structure: STRUCTURE_ROAD},
-  {xDelta: -4, yDelta: 4, structure: STRUCTURE_ROAD},
-  {xDelta: -3, yDelta: -5, structure: STRUCTURE_ROAD},
-  {xDelta: -3, yDelta: 0, structure: STRUCTURE_ROAD},
-  {xDelta: -3, yDelta: 5, structure: STRUCTURE_ROAD},
-  {xDelta: -2, yDelta: -6, structure: STRUCTURE_ROAD},
-  {xDelta: -2, yDelta: -1, structure: STRUCTURE_ROAD},
-  {xDelta: -2, yDelta: 1, structure: STRUCTURE_ROAD},
-  {xDelta: -2, yDelta: 5, structure: STRUCTURE_ROAD},
-  {xDelta: -2, yDelta: 6, structure: STRUCTURE_ROAD},
-  {xDelta: -1, yDelta: -6, structure: STRUCTURE_ROAD},
-  {xDelta: -1, yDelta: -2, structure: STRUCTURE_ROAD},
-  {xDelta: -1, yDelta: 2, structure: STRUCTURE_ROAD},
-  {xDelta: -1, yDelta: 4, structure: STRUCTURE_ROAD},
-  {xDelta: -1, yDelta: 6, structure: STRUCTURE_ROAD},
-  {xDelta: 0, yDelta: -6, structure: STRUCTURE_ROAD},
-  {xDelta: 0, yDelta: -3, structure: STRUCTURE_ROAD},
-  {xDelta: 0, yDelta: 3, structure: STRUCTURE_ROAD},
-  {xDelta: 0, yDelta: 6, structure: STRUCTURE_ROAD},
-  {xDelta: 1, yDelta: -6, structure: STRUCTURE_ROAD},
-  {xDelta: 1, yDelta: -4, structure: STRUCTURE_ROAD},
-  {xDelta: 1, yDelta: -2, structure: STRUCTURE_ROAD},
-  {xDelta: 1, yDelta: 2, structure: STRUCTURE_ROAD},
-  {xDelta: 1, yDelta: 6, structure: STRUCTURE_ROAD},
-  {xDelta: 2, yDelta: -6, structure: STRUCTURE_ROAD},
-  {xDelta: 2, yDelta: -5, structure: STRUCTURE_ROAD},
-  {xDelta: 2, yDelta: -1, structure: STRUCTURE_ROAD},
-  {xDelta: 2, yDelta: 1, structure: STRUCTURE_ROAD},
-  {xDelta: 2, yDelta: 6, structure: STRUCTURE_ROAD},
-  {xDelta: 3, yDelta: -5, structure: STRUCTURE_ROAD},
-  {xDelta: 3, yDelta: 0, structure: STRUCTURE_ROAD},
-  {xDelta: 3, yDelta: 5, structure: STRUCTURE_ROAD},
-  {xDelta: 4, yDelta: -4, structure: STRUCTURE_ROAD},
-  {xDelta: 4, yDelta: 1, structure: STRUCTURE_ROAD},
-  {xDelta: 4, yDelta: 4, structure: STRUCTURE_ROAD},
-  {xDelta: 5, yDelta: -3, structure: STRUCTURE_ROAD},
-  {xDelta: 5, yDelta: 2, structure: STRUCTURE_ROAD},
-  {xDelta: 5, yDelta: 3, structure: STRUCTURE_ROAD},
-  {xDelta: 6, yDelta: -2, structure: STRUCTURE_ROAD},
-  {xDelta: 6, yDelta: -1, structure: STRUCTURE_ROAD},
-  {xDelta: 6, yDelta: 0, structure: STRUCTURE_ROAD},
-  {xDelta: 6, yDelta: 1, structure: STRUCTURE_ROAD},
-  {xDelta: 6, yDelta: 2, structure: STRUCTURE_ROAD},
+  {x: -6, y: -2, structure: STRUCTURE_ROAD},
+  {x: -6, y: -1, structure: STRUCTURE_ROAD},
+  {x: -6, y: 0, structure: STRUCTURE_ROAD},
+  {x: -6, y: 1, structure: STRUCTURE_ROAD},
+  {x: -6, y: 2, structure: STRUCTURE_ROAD},
+  {x: -5, y: -3, structure: STRUCTURE_ROAD},
+  {x: -5, y: -2, structure: STRUCTURE_ROAD},
+  {x: -5, y: 3, structure: STRUCTURE_ROAD},
+  {x: -4, y: -4, structure: STRUCTURE_ROAD},
+  {x: -4, y: -1, structure: STRUCTURE_ROAD},
+  {x: -4, y: 4, structure: STRUCTURE_ROAD},
+  {x: -3, y: -5, structure: STRUCTURE_ROAD},
+  {x: -3, y: 0, structure: STRUCTURE_ROAD},
+  {x: -3, y: 5, structure: STRUCTURE_ROAD},
+  {x: -2, y: -6, structure: STRUCTURE_ROAD},
+  {x: -2, y: -1, structure: STRUCTURE_ROAD},
+  {x: -2, y: 1, structure: STRUCTURE_ROAD},
+  {x: -2, y: 5, structure: STRUCTURE_ROAD},
+  {x: -2, y: 6, structure: STRUCTURE_ROAD},
+  {x: -1, y: -6, structure: STRUCTURE_ROAD},
+  {x: -1, y: -2, structure: STRUCTURE_ROAD},
+  {x: -1, y: 2, structure: STRUCTURE_ROAD},
+  {x: -1, y: 4, structure: STRUCTURE_ROAD},
+  {x: -1, y: 6, structure: STRUCTURE_ROAD},
+  {x: 0, y: -6, structure: STRUCTURE_ROAD},
+  {x: 0, y: -3, structure: STRUCTURE_ROAD},
+  {x: 0, y: 3, structure: STRUCTURE_ROAD},
+  {x: 0, y: 6, structure: STRUCTURE_ROAD},
+  {x: 1, y: -6, structure: STRUCTURE_ROAD},
+  {x: 1, y: -4, structure: STRUCTURE_ROAD},
+  {x: 1, y: -2, structure: STRUCTURE_ROAD},
+  {x: 1, y: 2, structure: STRUCTURE_ROAD},
+  {x: 1, y: 6, structure: STRUCTURE_ROAD},
+  {x: 2, y: -6, structure: STRUCTURE_ROAD},
+  {x: 2, y: -5, structure: STRUCTURE_ROAD},
+  {x: 2, y: -1, structure: STRUCTURE_ROAD},
+  {x: 2, y: 1, structure: STRUCTURE_ROAD},
+  {x: 2, y: 6, structure: STRUCTURE_ROAD},
+  {x: 3, y: -5, structure: STRUCTURE_ROAD},
+  {x: 3, y: 0, structure: STRUCTURE_ROAD},
+  {x: 3, y: 5, structure: STRUCTURE_ROAD},
+  {x: 4, y: -4, structure: STRUCTURE_ROAD},
+  {x: 4, y: 1, structure: STRUCTURE_ROAD},
+  {x: 4, y: 4, structure: STRUCTURE_ROAD},
+  {x: 5, y: -3, structure: STRUCTURE_ROAD},
+  {x: 5, y: 2, structure: STRUCTURE_ROAD},
+  {x: 5, y: 3, structure: STRUCTURE_ROAD},
+  {x: 6, y: -2, structure: STRUCTURE_ROAD},
+  {x: 6, y: -1, structure: STRUCTURE_ROAD},
+  {x: 6, y: 0, structure: STRUCTURE_ROAD},
+  {x: 6, y: 1, structure: STRUCTURE_ROAD},
+  {x: 6, y: 2, structure: STRUCTURE_ROAD},
 ]; //todo: complete list
 
 class BunkerBaseLayout {
@@ -120,12 +155,29 @@ class BunkerBaseLayout {
 
   new(room: Room): boolean {
     this.costMatrix = getCostMatrix(room, false);
+
+    /**
+     *  Reserve Slots around Economy Centers (Upgrader, Sources)
+     *  Todo: Add Minerals
+     */
     this.reservedControllerPositions = this.getReservedTiles(3, this.controllerPos, this.costMatrix);
     room.find(FIND_SOURCES).forEach( (source, index) => {
       this.reservedSourcePositions.push(this.getReservedTiles(1, source.pos, this.costMatrix));
     });
 
+    /**
+     *  Find & set best RoomPosition for the BaseCenter
+     *  Update CostMatrix to enhance pathFinding result
+     */
+
     if (!this.setBaseCenter()) { return false; }
+    this.updateCostMatrix(BASE_LAYOUT, true);
+
+
+
+
+    // todo: find paths to controller, sources & mineral, reSupplyPaths
+    // todo: save everything
 
     return true;
   }
@@ -157,6 +209,17 @@ class BunkerBaseLayout {
     return false;
   }
 
+  saveToMemory() {
+    /**
+     * data to save on Room:
+     *  BaseCenter
+     *  UpgraderSpot, UpgraderLinkSpot, PathFromSpawn
+     *  []: MiningSpot, MiningLinkSpot, PathFromSpawn, SourceId
+     *  MineralMiningSpot, PathFromSpawn, MineralId ? ExtractorId?
+     *  Defense ?
+     */
+  }
+
   visualize() {
     const roomVisual = new RoomVisual(this.room.name);
     roomVisual.rect(this.baseCenter.x - 0.5, this.baseCenter.y - 0.5, 1, 1, {
@@ -168,7 +231,7 @@ class BunkerBaseLayout {
       switch (spot.structure) {
         case (STRUCTURE_ROAD): {
           if (this.baseCenter == undefined) { return; }
-          roomVisual.rect(this.baseCenter.x + spot.xDelta - 0.5, this.baseCenter.y + spot.yDelta - 0.5, 1, 1, {
+          roomVisual.rect(this.baseCenter.x + spot.x - 0.5, this.baseCenter.y + spot.y - 0.5, 1, 1, {
             fill: 'green',
             opacity: 0.4,
           });
@@ -192,80 +255,16 @@ class BunkerBaseLayout {
 
     return arr;
   }
-}
 
-//todo: once this works: rewrite the whole thing as a class
-const getRoomLayout = (room: Room) => {
-  if (!room.controller) { return; } // error: cannot build base in room without controller
-
-  let basicCostMatrix = getCostMatrix(room, false);
-  let reverseCostMatrix = getCostMatrix(room, true);
-
-  let manualInstructionArr = findRelevantFlagsForRoomLayout(room);
-  reverseCostMatrix = incorporateManualInstructionsInCostMatrix( reverseCostMatrix, manualInstructionArr);
-  reverseCostMatrix = reserveCriticalEconomyAreas(room, reverseCostMatrix);
-  let distanceTransformCostMatrix = distanceTransform(room, reverseCostMatrix);
-
-  //visualizeDistanceTransform(room, distanceTransformCostMatrix);
-
-  let potentialBaseCenters = getPotentialBaseCentersFromCostMatrix(distanceTransformCostMatrix, 6, room);
-  if (potentialBaseCenters.length == 0) { return; } // error: no suitable base found
-  let floodFilledCostMatrix = floodFill(room, getRoomPositionArrOfPotentialUpgradingSpots(room, basicCostMatrix));
-
-  let baseCenter = selectBaseCenter(potentialBaseCenters, floodFilledCostMatrix);
-
-  let costMatrix = setBaseLayout(baseCenter, getCostMatrix(room, false));
-
-  // todo: find spawn locations
-  // todo: find paths to controller, sources & mineral, reSupplyPaths
-  // todo: save everything
-
-  return baseCenter;
-}
-
-const findRelevantFlagsForRoomLayout = (room: Room): Flag[] => {
-  let relevantFlagArr = [];
-  for (let i in Game.flags) {
-    if (Game.flags[i].color != COLOR_PURPLE) { continue; }
-    if (Game.flags[i].room == undefined) { continue; }
-    // @ts-ignore
-    if (Game.flags[i].room.name == room.name) {
-      relevantFlagArr.push(Game.flags[i]);
-    }
+  updateCostMatrix (structureArr: StructurePos[], relativeToBaseCenter: boolean = false) {
+    structureArr.forEach(pos => {
+      if (pos.structure == STRUCTURE_CONTAINER) { return; }
+      this.costMatrix.set(
+        pos.x + (relativeToBaseCenter ? this.baseCenter.x : 0),
+        pos.y + (relativeToBaseCenter ? this.baseCenter.y : 0),
+        pos.structure == STRUCTURE_ROAD ? 1 : 255);
+    });
   }
-  return  relevantFlagArr;
-}
-
-const incorporateManualInstructionsInCostMatrix = (costMatrix: CostMatrix, instructions: Flag[]): CostMatrix => {
-  instructions.forEach( flag => {
-    if (flag.secondaryColor == COLOR_YELLOW) { costMatrix.set(flag.pos.x, flag.pos.y, 0); }
-  });
-  return costMatrix;
-}
-
-const reserveCriticalEconomyAreas = (room: Room, costMatrix: CostMatrix, controllerRadius: number = 2, sourceRadius: number = 1, mineralRadius: number = 1): CostMatrix => {
-  if (!room.controller) { return costMatrix; }
-
-  costMatrix = reserveTiles(costMatrix, room.controller.pos, controllerRadius);
-
-  room.find(FIND_SOURCES).forEach(source => {
-    costMatrix = reserveTiles(costMatrix, source.pos, sourceRadius);
-  });
-
-  room.find(FIND_MINERALS).forEach(source => {
-    costMatrix = reserveTiles(costMatrix, source.pos, mineralRadius);
-  });
-
-  return costMatrix;
-}
-
-const reserveTiles = (costMatrix: CostMatrix ,pos: RoomPosition, radius: number): CostMatrix => {
-  for (let xDelta = - radius; xDelta <= radius; xDelta++) {
-    for (let yDelta = - radius; yDelta <= radius; yDelta++) {
-      costMatrix.set(pos.x + xDelta, pos.y + yDelta, 0);
-    }
-  }
-  return costMatrix;
 }
 
 const getRoomPositionArrOfPotentialUpgradingSpots = (room: Room, costMatrix: CostMatrix): RoomPosition[] => {
@@ -308,54 +307,4 @@ const selectBaseCenter = (potentialBaseCenters: RoomPosition[], floodFilledCostM
   return closestPoint;
 }
 
-const setBaseLayout = (baseCenter: RoomPosition, costMatrix: CostMatrix): CostMatrix => {
-  BASE_LAYOUT.forEach(pos => {
-    if (pos.structure == STRUCTURE_CONTAINER) { return; }
-    costMatrix.set(
-      baseCenter.x + pos.xDelta,
-      baseCenter.y + pos.yDelta,
-      pos.structure == STRUCTURE_ROAD ? 0 : 255);
-  });
-  return costMatrix;
-}
-
-/**
- * data to save on Room:
- *  BaseCenter
- *  UpgraderSpot, UpgraderLinkSpot, PathFromSpawn
- *  []: MiningSpot, MiningLinkSpot, PathFromSpawn, SourceId
- *  MineralMiningSpot, PathFromSpawn, MineralId ? ExtractorId?
- *  Defense ?
- */
-
-/**
- * Visualize Room Layout
- */
-
-const visualizeRoomLayout = (room: Room) => {
-  let baseCenter = getRoomLayout(room);
-  if (baseCenter == undefined) { return; }
-  const roomVisual = new RoomVisual(room.name);
-  roomVisual.rect(baseCenter.x - 0.5, baseCenter.y - 0.5, 1, 1, {
-    fill: 'purple',
-    opacity: 0.4,
-  });
-
-  BASE_LAYOUT.forEach( spot => {
-    switch (spot.structure) {
-      case (STRUCTURE_ROAD): {
-        if (baseCenter == undefined) { return; }
-        roomVisual.rect(baseCenter.x + spot.xDelta - 0.5, baseCenter.y + spot.yDelta - 0.5, 1, 1, {
-          fill: 'green',
-          opacity: 0.4,
-        });
-        break;
-      }
-      default: {
-
-      }
-    }
-  });
-}
-
-export {visualizeRoomLayout, BunkerBaseLayout}
+export {BunkerBaseLayout}

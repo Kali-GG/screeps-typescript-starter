@@ -1,5 +1,5 @@
-const COST_PLAIN = 1; // set to 1 so that we can discount & therefore reuse roads!
-const COST_SWAMP = 2;
+const COST_PLAIN = 2; // set to 1 so that we can discount & therefore reuse roads!
+const COST_SWAMP = 4;
 const COST_WALL = 255;
 
 const REVERSE_COST_PLAIN = 255;
@@ -20,11 +20,11 @@ const getCostMatrix = (room: Room, reverseCost: boolean = false): CostMatrix => 
        switch (terrain.get(x, y)) {
          case TERRAIN_MASK_WALL || TERRAIN_MASK_LAVA: {
            costs.set(x, y, reverseCost ? REVERSE_COST_WALL : COST_WALL);
-           continue;
+
          }
          case TERRAIN_MASK_SWAMP: {
            costs.set(x, y, reverseCost ? REVERSE_COST_SWAMP : COST_SWAMP);
-           continue;
+
          }
          default: {
            costs.set(x, y, reverseCost? REVERSE_COST_PLAIN : COST_PLAIN);
