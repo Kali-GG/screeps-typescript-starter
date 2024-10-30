@@ -16,8 +16,10 @@
  */
 
 import {getCostMatrix} from "./getCostMatrix";
-import {distanceTransform} from "./distanceTransform";
+import {distanceTransform, visualizeDistanceTransform} from "./distanceTransform";
 import {floodFill} from "./floodFill";
+// @ts-ignore
+import {getMincut} from "./utils.js";
 
 /**
  * getCostMatrix()
@@ -139,6 +141,7 @@ class BunkerBaseLayout {
   reservedControllerPositions: RoomPosition[];
   reservedSourcePositions: RoomPosition[][];
   baseCenter: RoomPosition;
+  cuts: RoomPosition[];
 
   complete: boolean;
 
@@ -149,6 +152,7 @@ class BunkerBaseLayout {
     this.costMatrix  = new PathFinder.CostMatrix;
     this.reservedControllerPositions = [];
     this.reservedSourcePositions = [];
+    this.cuts = [];
 
     this.complete = loadFromMemory ? this.loadFromMemory() : this.new(room);
   }
@@ -161,6 +165,7 @@ class BunkerBaseLayout {
      *  Todo: Add Minerals
      */
     this.reservedControllerPositions = this.getReservedTiles(3, this.controllerPos, this.costMatrix);
+
     room.find(FIND_SOURCES).forEach( (source, index) => {
       this.reservedSourcePositions.push(this.getReservedTiles(1, source.pos, this.costMatrix));
     });
@@ -173,8 +178,14 @@ class BunkerBaseLayout {
     if (!this.setBaseCenter()) { return false; }
     this.updateCostMatrix(BASE_LAYOUT, true);
 
+    let arr = [];
+    for (let x = -5; x <=5; x++) {
+      for (let y = -5; y <=5; y++) {
+        arr.push(new RoomPosition(this.baseCenter.x + x, this.baseCenter.y + y, room.name));
+      }
+    }
 
-
+    this.cuts = getMincut(room.name, arr, this.costMatrix);
 
     // todo: find paths to controller, sources & mineral, reSupplyPaths
     // todo: save everything
@@ -196,11 +207,12 @@ class BunkerBaseLayout {
     this.reservedSourcePositions.forEach( arr => { reverseCostMatrix = this.addReservedPositionArrToCostMatrix(reverseCostMatrix, arr); });
 
     let distanceTransformCostMatrix = distanceTransform(this.room, reverseCostMatrix);
+
     let potentialBaseCenters = getPotentialBaseCentersFromCostMatrix(distanceTransformCostMatrix, 6, this.room);
     if (potentialBaseCenters.length == 0) { return false; } // error: no suitable base found
     let floodFilledCostMatrix = floodFill(this.room, getRoomPositionArrOfPotentialUpgradingSpots(this.room, this.costMatrix));
-
     this.baseCenter = selectBaseCenter(potentialBaseCenters, floodFilledCostMatrix);
+
     return true;
   }
 
@@ -242,6 +254,16 @@ class BunkerBaseLayout {
         }
       }
     });
+
+
+    this.cuts.forEach( pos => {
+      roomVisual.rect(pos.x - 0.5, pos.y - 0.5, 1, 1, {
+        fill: 'blue',
+        opacity: 0.4,
+      });
+    });
+
+
   }
 
   getReservedTiles (range: number = 3, pos: RoomPosition, costMatrix: CostMatrix): RoomPosition[] {

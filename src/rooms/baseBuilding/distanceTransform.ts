@@ -10,10 +10,10 @@
  * https://sy-harabi.github.io/Automating-base-planning-in-screeps/
  * https://github.com/sy-harabi/screeps-utils/blob/33a0a406d86ed0a916d540340b3d07e3f5992065/utils.js#L10
  */
-import {getCostMatrix} from "./getCostMatrix";
 
+const distanceTransform = (room: Room, costMatrix: CostMatrix): CostMatrix => {
 
-const distanceTransform = (room: Room, costMatrix: CostMatrix = getCostMatrix(room, true)): CostMatrix => {
+  let newCostMatrix = costMatrix.clone();
 
   const BOTTOM_LEFT = [
     { x: -1, y: 0 },
@@ -32,25 +32,25 @@ const distanceTransform = (room: Room, costMatrix: CostMatrix = getCostMatrix(ro
   for (let x = 0; x <= 49; x++) {
     for (let y = 0; y <= 49; y++) {
       const nearDistances = BOTTOM_LEFT.map(
-        (vector) => costMatrix.get(x + vector.x, y + vector.y) + 1 || 100
+        (vector) => newCostMatrix.get(x + vector.x, y + vector.y) + 1 || 100
       );
-      nearDistances.push(costMatrix.get(x, y));
-      costMatrix.set(x, y, Math.min(...nearDistances));
+      nearDistances.push(newCostMatrix.get(x, y));
+      newCostMatrix.set(x, y, Math.min(...nearDistances));
     }
   }
 
   for (let x = 49; x >= 0; x--) {
     for (let y = 49; y >= 0; y--) {
       const nearDistances = TOP_RIGHT.map(
-        (vector) => costMatrix.get(x + vector.x, y + vector.y) + 1 || 100
+        (vector) => newCostMatrix.get(x + vector.x, y + vector.y) + 1 || 100
       );
-      nearDistances.push(costMatrix.get(x, y));
+      nearDistances.push(newCostMatrix.get(x, y));
       const distance = Math.min(...nearDistances);
-      costMatrix.set(x, y, distance);
+      newCostMatrix.set(x, y, distance);
     }
   }
 
-  return costMatrix;
+  return newCostMatrix;
 }
 
 const visualizeDistanceTransform = (room: Room, costs: CostMatrix) => {
@@ -61,9 +61,11 @@ const visualizeDistanceTransform = (room: Room, costs: CostMatrix) => {
 
   for (let x = 49; x >= 0; x--) {
     for (let y = 49; y >= 0; y--) {
+
       if (terrain.get(x, y) === TERRAIN_MASK_WALL) {
         continue;
       }
+
       const cost = costs.get(x, y);
 
       if (cost === 0) {

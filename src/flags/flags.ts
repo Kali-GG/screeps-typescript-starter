@@ -2,7 +2,7 @@
 import {visualizeBaseBuilding} from "../rooms/visualizeBaseBuilding";
 import {distanceTransform, visualizeDistanceTransform} from "../rooms/baseBuilding/distanceTransform";
 import {floodFill, visualizeFloodFill} from "../rooms/baseBuilding/floodFill";
-import {BunkerBaseLayout, visualizeRoomLayout} from "../rooms/baseBuilding/bunker";
+import {BunkerBaseLayout} from "../rooms/baseBuilding/bunker";
 
 const processFlags = () => {
   for (let i in Game.flags) {
@@ -26,12 +26,6 @@ const processFlags = () => {
         Game.flags[i].remove();
         break;
       }
-      case 'distanceTransform': {
-        let room = Game.flags[i].room;
-        if (!room) { return; }
-        visualizeDistanceTransform(room, distanceTransform(room));
-        break;
-      }
       case 'floodFill': {
         let room = Game.flags[i].room;
         if (!room) { return; }
@@ -39,9 +33,9 @@ const processFlags = () => {
         break;
       }
       case 'baseTest': {
+        if (Game.cpu.bucket < 9000) { return; }
         let room = Game.flags[i].room;
         if (!room) { return; }
-        //visualizeRoomLayout(room);
         let baseLayout = new BunkerBaseLayout(room);
         baseLayout.visualize();
         break;
