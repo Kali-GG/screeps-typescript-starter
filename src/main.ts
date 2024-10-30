@@ -18,6 +18,6 @@ export const loop = ErrorMapper.wrapLoop(() => {
   processSpawns();
   processFlags();
 
-  console.log(`Tick ${Game.time} - CPU Usage: ${Game.cpu.getUsed()}`);
+  console.log(`Tick ${Game.time} - CPU Usage: ${Game.cpu.getUsed().toFixed(2)} - Bucket: ${Game.cpu.bucket.toFixed(2)} `);
 
 });
