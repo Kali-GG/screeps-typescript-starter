@@ -3,6 +3,7 @@ import {visualizeBaseBuilding} from "../rooms/visualizeBaseBuilding";
 import {distanceTransform, visualizeDistanceTransform} from "../rooms/baseBuilding/distanceTransform";
 import {floodFill, visualizeFloodFill} from "../rooms/baseBuilding/floodFill";
 import {BunkerBaseLayout} from "../rooms/baseBuilding/bunker";
+import {OrganicBaseLayout} from "../rooms/baseBuilding/organic";
 
 const processFlags = () => {
   for (let i in Game.flags) {
@@ -37,6 +38,14 @@ const processFlags = () => {
         let room = Game.flags[i].room;
         if (!room) { return; }
         let baseLayout = new BunkerBaseLayout(room);
+        baseLayout.visualize();
+        break;
+      }
+      case 'organicBaseTest': {
+        if (Game.cpu.bucket < 9000) { return; }
+        let room = Game.flags[i].room;
+        if (!room) { return; }
+        let baseLayout = new OrganicBaseLayout(room);
         baseLayout.visualize();
         break;
       }

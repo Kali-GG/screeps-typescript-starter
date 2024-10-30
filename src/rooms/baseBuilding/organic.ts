@@ -20,6 +20,7 @@ import {distanceTransform, visualizeDistanceTransform} from "./distanceTransform
 import {floodFill} from "./floodFill";
 // @ts-ignore
 import {getMincut} from "./utils.js";
+import {globalRoom} from "../rooms";
 
 /**
  * getCostMatrix()
@@ -33,6 +34,10 @@ import {getMincut} from "./utils.js";
  * defense ??
  */
 
+interface SimplePos {
+  x: number,
+  y: number
+}
 interface StructurePos {
   x: number,
   y: number,
@@ -80,61 +85,53 @@ const BASE_LAYOUT: StructurePos[] = [
   /**
    * roads
    */
-  {x: -6, y: -2, structure: STRUCTURE_ROAD},
-  {x: -6, y: -1, structure: STRUCTURE_ROAD},
-  {x: -6, y: 0, structure: STRUCTURE_ROAD},
-  {x: -6, y: 1, structure: STRUCTURE_ROAD},
-  {x: -6, y: 2, structure: STRUCTURE_ROAD},
-  {x: -5, y: -3, structure: STRUCTURE_ROAD},
-  {x: -5, y: -2, structure: STRUCTURE_ROAD},
-  {x: -5, y: 3, structure: STRUCTURE_ROAD},
-  {x: -4, y: -4, structure: STRUCTURE_ROAD},
   {x: -4, y: -1, structure: STRUCTURE_ROAD},
-  {x: -4, y: 4, structure: STRUCTURE_ROAD},
-  {x: -3, y: -5, structure: STRUCTURE_ROAD},
+  {x: -4, y: 2, structure: STRUCTURE_ROAD},
   {x: -3, y: 0, structure: STRUCTURE_ROAD},
-  {x: -3, y: 5, structure: STRUCTURE_ROAD},
-  {x: -2, y: -6, structure: STRUCTURE_ROAD},
-  {x: -2, y: -1, structure: STRUCTURE_ROAD},
+  {x: -3, y: 1, structure: STRUCTURE_ROAD},
+  {x: -2, y: -4, structure: STRUCTURE_ROAD},
+  {x: -2, y: 0, structure: STRUCTURE_ROAD},
   {x: -2, y: 1, structure: STRUCTURE_ROAD},
-  {x: -2, y: 5, structure: STRUCTURE_ROAD},
-  {x: -2, y: 6, structure: STRUCTURE_ROAD},
-  {x: -1, y: -6, structure: STRUCTURE_ROAD},
-  {x: -1, y: -2, structure: STRUCTURE_ROAD},
+  {x: -1, y: -3, structure: STRUCTURE_ROAD},
+  {x: -1, y: -1, structure: STRUCTURE_ROAD},
   {x: -1, y: 2, structure: STRUCTURE_ROAD},
   {x: -1, y: 4, structure: STRUCTURE_ROAD},
-  {x: -1, y: 6, structure: STRUCTURE_ROAD},
-  {x: 0, y: -6, structure: STRUCTURE_ROAD},
-  {x: 0, y: -3, structure: STRUCTURE_ROAD},
+  {x: 0, y: -2, structure: STRUCTURE_ROAD},
   {x: 0, y: 3, structure: STRUCTURE_ROAD},
-  {x: 0, y: 6, structure: STRUCTURE_ROAD},
-  {x: 1, y: -6, structure: STRUCTURE_ROAD},
-  {x: 1, y: -4, structure: STRUCTURE_ROAD},
-  {x: 1, y: -2, structure: STRUCTURE_ROAD},
+  {x: 1, y: -3, structure: STRUCTURE_ROAD},
+  {x: 1, y: -1, structure: STRUCTURE_ROAD},
   {x: 1, y: 2, structure: STRUCTURE_ROAD},
-  {x: 1, y: 6, structure: STRUCTURE_ROAD},
-  {x: 2, y: -6, structure: STRUCTURE_ROAD},
-  {x: 2, y: -5, structure: STRUCTURE_ROAD},
-  {x: 2, y: -1, structure: STRUCTURE_ROAD},
+  {x: 1, y: 4, structure: STRUCTURE_ROAD},
+  {x: 2, y: -4, structure: STRUCTURE_ROAD},
+  {x: 2, y: 0, structure: STRUCTURE_ROAD},
   {x: 2, y: 1, structure: STRUCTURE_ROAD},
-  {x: 2, y: 6, structure: STRUCTURE_ROAD},
-  {x: 3, y: -5, structure: STRUCTURE_ROAD},
   {x: 3, y: 0, structure: STRUCTURE_ROAD},
-  {x: 3, y: 5, structure: STRUCTURE_ROAD},
-  {x: 4, y: -4, structure: STRUCTURE_ROAD},
-  {x: 4, y: 1, structure: STRUCTURE_ROAD},
-  {x: 4, y: 4, structure: STRUCTURE_ROAD},
-  {x: 5, y: -3, structure: STRUCTURE_ROAD},
-  {x: 5, y: 2, structure: STRUCTURE_ROAD},
-  {x: 5, y: 3, structure: STRUCTURE_ROAD},
-  {x: 6, y: -2, structure: STRUCTURE_ROAD},
-  {x: 6, y: -1, structure: STRUCTURE_ROAD},
-  {x: 6, y: 0, structure: STRUCTURE_ROAD},
-  {x: 6, y: 1, structure: STRUCTURE_ROAD},
-  {x: 6, y: 2, structure: STRUCTURE_ROAD},
+  {x: 3, y: 1, structure: STRUCTURE_ROAD},
+  {x: 4, y: -1, structure: STRUCTURE_ROAD},
+  {x: 4, y: 2, structure: STRUCTURE_ROAD},
+
 ]; //todo: complete list
 
-class BunkerBaseLayout {
+const centralDepositPos: SimplePos = {x: -2, y: 0};
+const BASE_ROAD_ENDS: SimplePos[] = [
+  {x: -4, y: -1},
+  {x: -4, y: 2},
+  {x: -2, y: -4},
+  {x: -1, y: 4},
+  {x: 1, y: 4},
+  {x: 2, y: -4},
+  {x: 4, y: -1},
+  {x: 4, y: 2},
+];
+
+/**
+ * Paths
+ *
+ */
+
+
+
+class OrganicBaseLayout {
   room: Room;
   controllerPos: RoomPosition;
   costMatrix: CostMatrix;
@@ -154,7 +151,13 @@ class BunkerBaseLayout {
     this.reservedSourcePositions = [];
     this.cuts = [];
 
-    this.complete = loadFromMemory ? this.loadFromMemory() : this.new(room);
+    if (!this.loadFromCache()) {
+      console.log(`loading from cache failed`)
+      this.complete = loadFromMemory ? this.loadFromMemory() : this.new(room);
+      if (this.complete == true) { this.cacheRoom(); }
+    }
+
+
   }
 
   new(room: Room): boolean {
@@ -175,9 +178,12 @@ class BunkerBaseLayout {
      *  Update CostMatrix to enhance pathFinding result
      */
 
-    if (!this.setBaseCenter()) { return false; }
+    if (!this.setBaseCenterNew(4,5)) { return false; }
     this.updateCostMatrix(BASE_LAYOUT, true);
 
+
+
+    /*
     let arr = [];
     for (let x = -5; x <=5; x++) {
       for (let y = -5; y <=5; y++) {
@@ -186,6 +192,8 @@ class BunkerBaseLayout {
     }
 
     this.cuts = getMincut(room.name, arr, this.costMatrix);
+
+     */
 
     // todo: find paths to controller, sources & mineral, reSupplyPaths
     // todo: save everything
@@ -200,25 +208,73 @@ class BunkerBaseLayout {
     return costMatrix;
   }
 
-  setBaseCenter(baseRadius: number = 6): boolean {
+  setBaseCenterNew(minBaseRadius: number, optimalBaseRadius: number): boolean {
 
     let reverseCostMatrix = getCostMatrix(this.room, true);
     reverseCostMatrix = this.addReservedPositionArrToCostMatrix(reverseCostMatrix, this.reservedControllerPositions);
     this.reservedSourcePositions.forEach( arr => { reverseCostMatrix = this.addReservedPositionArrToCostMatrix(reverseCostMatrix, arr); });
 
     let distanceTransformCostMatrix = distanceTransform(this.room, reverseCostMatrix);
+    let floodFilledCostMatrix = floodFill(this.room, this.reservedControllerPositions);
 
-    let potentialBaseCenters = getPotentialBaseCentersFromCostMatrix(distanceTransformCostMatrix, baseRadius, this.room);
-    if (potentialBaseCenters.length == 0) { return false; } // error: no suitable base found
-    let floodFilledCostMatrix = floodFill(this.room, getRoomPositionArrOfPotentialUpgradingSpots(this.room, this.costMatrix));
-    this.baseCenter = selectBaseCenter(potentialBaseCenters, floodFilledCostMatrix);
+    this.baseCenter = this.findBestBaseCenter(floodFilledCostMatrix, distanceTransformCostMatrix, minBaseRadius, optimalBaseRadius);
 
-    return true;
+    return (this.baseCenter.x != 0) ? true : false;
   }
+
+  findBestBaseCenter(floodFilledCostMatrix: CostMatrix, distanceTransformCostMatrix: CostMatrix, minBaseRadius: number, optimalBaseRadius: number): RoomPosition {
+
+    const baseEvaluation = 200;
+    const radiusValueModification = 1.1;
+
+    let currentSpot: RoomPosition = new RoomPosition(0,0, this.room.name);
+    let currentSpotEvaluation: number = 0;
+
+    let distance: number;
+    let radius: number;
+    let evaluation: number;
+
+    for (let x = minBaseRadius; x <= 49 - minBaseRadius; x++) {
+      for (let y = minBaseRadius; y <= 49 - minBaseRadius; y++) {
+        if (distanceTransformCostMatrix.get(x,y) < minBaseRadius) { continue; }
+
+        distance = floodFilledCostMatrix.get(x,y);
+        radius = distanceTransformCostMatrix.get(x,y);
+
+        evaluation = baseEvaluation - distance  + Math.min(radius, optimalBaseRadius) * radiusValueModification;
+
+        if (evaluation > currentSpotEvaluation) {
+          currentSpotEvaluation = evaluation;
+          currentSpot.x = x;
+          currentSpot.y = y;
+        }
+      }
+    }
+
+    return currentSpot;
+  }
+
 
   loadFromMemory() {
     //todo: implement
     return false;
+  }
+
+  cacheRoom() {
+    let roomCache = globalRoom(this.room.name);
+    roomCache.costMatrix = this.costMatrix;
+    roomCache.baseCenter = this.baseCenter;
+  }
+
+  loadFromCache(): boolean {
+    let roomCache = globalRoom(this.room.name);
+    if (!roomCache.costMatrix) { return false; }
+    if (!roomCache.baseCenter) { return false; }
+
+    this.baseCenter = roomCache.baseCenter;
+    this.costMatrix = roomCache.costMatrix;
+
+    return true;
   }
 
   saveToMemory() {
@@ -279,54 +335,22 @@ class BunkerBaseLayout {
   }
 
   updateCostMatrix (structureArr: StructurePos[], relativeToBaseCenter: boolean = false) {
+
+    const ROAD_COST = 1;
+    const STRUCTURE_COST = 100;
+
     structureArr.forEach(pos => {
       if (pos.structure == STRUCTURE_CONTAINER) { return; }
       this.costMatrix.set(
         pos.x + (relativeToBaseCenter ? this.baseCenter.x : 0),
         pos.y + (relativeToBaseCenter ? this.baseCenter.y : 0),
-        pos.structure == STRUCTURE_ROAD ? 1 : 255);
+        pos.structure == STRUCTURE_ROAD ? ROAD_COST : STRUCTURE_COST);
     });
   }
 }
 
-const getRoomPositionArrOfPotentialUpgradingSpots = (room: Room, costMatrix: CostMatrix): RoomPosition[] => {
-  let arr: RoomPosition[] = [];
 
-  if (!room.controller) { return arr; }
 
-  for (let xDelta = - 3; xDelta <= 3; xDelta++) {
-    for (let yDelta = - 3; yDelta <= 3; yDelta++) {
-      if (costMatrix.get(room.controller.pos.x + xDelta, room.controller.pos.y + yDelta) < 255) {
-        arr.push(new RoomPosition(room.controller.pos.x + xDelta, room.controller.pos.y + yDelta, room.name)) ;
-      }
-    }
-  }
-  return arr;
-}
 
-const getPotentialBaseCentersFromCostMatrix = (costMatrix: CostMatrix, baseSize: number, room: Room): RoomPosition[] => {
-  let potentialBaseCenters: RoomPosition[] = [];
 
-  for (let x = 0; x <= 49; x++) {
-    for (let y = 0; y <= 49; y++) {
-      if (costMatrix.get(x,y) >= baseSize) { potentialBaseCenters.push(new RoomPosition(x,y,room.name)); }
-    }
-  }
-
-  return  potentialBaseCenters;
-}
-
-const selectBaseCenter = (potentialBaseCenters: RoomPosition[], floodFilledCostMatrix: CostMatrix): RoomPosition => {
-  let closestPoint: RoomPosition = potentialBaseCenters[0];
-  let closestDistance = floodFilledCostMatrix.get(closestPoint.x, closestPoint.y);
-
-  potentialBaseCenters.forEach(point => {
-    if (floodFilledCostMatrix.get(point.x, point.y) > closestDistance) { return; }
-    closestDistance = floodFilledCostMatrix.get(point.x, point.y);
-    closestPoint = point;
-  });
-
-  return closestPoint;
-}
-
-export {BunkerBaseLayout}
+export {OrganicBaseLayout}

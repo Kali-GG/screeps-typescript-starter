@@ -83,7 +83,9 @@ declare global {
 
   interface RoomCache {
     emptyEnergyReservesArr: string[],
-    updateEmptyEnergyReservesArr: boolean
+    updateEmptyEnergyReservesArr: boolean,
+    baseCenter?: RoomPosition,
+    costMatrix?: CostMatrix
   }
 
   // Syntax for adding properties to `global` (ex "global.log")
