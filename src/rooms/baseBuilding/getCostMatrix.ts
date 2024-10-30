@@ -20,11 +20,11 @@ const getCostMatrix = (room: Room, reverseCost: boolean = false): CostMatrix => 
        switch (terrain.get(x, y)) {
          case TERRAIN_MASK_WALL || TERRAIN_MASK_LAVA: {
            costs.set(x, y, reverseCost ? REVERSE_COST_WALL : COST_WALL);
-
+           break;
          }
          case TERRAIN_MASK_SWAMP: {
            costs.set(x, y, reverseCost ? REVERSE_COST_SWAMP : COST_SWAMP);
-
+           break;
          }
          default: {
            costs.set(x, y, reverseCost? REVERSE_COST_PLAIN : COST_PLAIN);
