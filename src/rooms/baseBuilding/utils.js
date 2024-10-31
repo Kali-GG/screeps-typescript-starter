@@ -319,8 +319,10 @@ module.exports = {
       getBlockingFlow(sourceVertices, exit, capacityMap, levels);
       i++;
     }
-    console.log("iteration ends.");
-    return ERR_NOT_FOUND;
+    //console.log("iteration ends.");
+    //return ERR_NOT_FOUND;
+    // Flo: we just expect an array and return an empty one if nothing else
+    return [];
   },
 };
 

@@ -34,39 +34,39 @@ import {globalRoom} from "../rooms";
  * defense ??
  */
 
-interface SimplePos {
-  x: number,
-  y: number
-}
+
 interface StructurePos {
   x: number,
   y: number,
   structure: string
 }
 
+/**
+ * Defines the core of the base
+ */
 const BASE_LAYOUT: StructurePos[] = [
-
+  // https://screepers.github.io/screeps-tools/?share=N4IgTgxgNiBcAcAaEAjArgSygEwwOwHMBnOUMAewENs4BtUADzgCYA2ZATxYAYBfRRiwDsnFgEZ+g2MwCso2GICckkE2kBmecwkDVLACxa+utc0MguC+CtPMtOqdqM2Wmiy2Yvp5y83VfZLX0A9ncrEK1-E2EtT2jvLRkIsNkApBS4x3TfBz1pRWd45gKw4KKS3yjHOwyAsUiAt19WAJEUlqKmuDEhAJrLMQ7HNoHeouzuobz1bnklLxmggNmUsscVgeUAXWQAUwYAF128IgxyPDpHH27lTrnrO7D5ov6ePrnbx3qnz7ynFNypm+vkyf2uCjGjjkTweULmkL+oVGyU2rQ+aJhGN8xiyhVxPwCFRuAXBZkaiXeKSqfy6GnJq0pvjWf2BBkJ9nZtSK0N8SXGDSKI1cnKZaSWgvFjiRbIlKT51XhjO6sJZiv5TwRpgm4SKrIUU1MtMGJLmBpY0v1WMmIut5XuCw2yodeOmjukgJYRIhzqpPpBfpY8r+XtS6t5YvaKPNAR50Z2ICIAAdKAB3C6weh-WN0ooW7RR6SeeNEA7kMCUAi7S5gjnxo5gAC2+EoMAzV1ivHjUHwAGtq4bnFteLwgA#/building-planner
   /**
    * Spawn
    */
-  {x: 0, y: -2, structure: STRUCTURE_SPAWN},
+  {x: 1, y: 0, structure: STRUCTURE_SPAWN},
+  {x: 1, y: 1, structure: STRUCTURE_SPAWN},
   {x: 0, y: 2, structure: STRUCTURE_SPAWN},
-  {x: 2, y: 0, structure: STRUCTURE_SPAWN},
 
   /**
    *  Storage
    */
-  {x: -2, y: 0, structure: STRUCTURE_STORAGE},
+  {x: -1, y: 0, structure: STRUCTURE_STORAGE},
 
   /**
    * Terminal
    */
-  {x: -1, y: -1, structure: STRUCTURE_TERMINAL},
+  {x: -1, y: 1, structure: STRUCTURE_TERMINAL},
 
   /**
    * Link
    */
-  {x: -1, y: 0, structure: STRUCTURE_LINK},
+  {x: -2, y: -1, structure: STRUCTURE_LINK},
 
   /**
    * Observer
@@ -112,8 +112,20 @@ const BASE_LAYOUT: StructurePos[] = [
 
 ]; //todo: complete list
 
-const centralDepositPos: SimplePos = {x: -2, y: 0};
-const BASE_ROAD_ENDS: SimplePos[] = [
+const STRUCTURE_COST_FOR_COSTMATRIX: { [name: string]: number } = {
+  [STRUCTURE_ROAD]: 1,
+  [STRUCTURE_OBSERVER]: 10,
+  [STRUCTURE_EXTENSION]: 11,
+  [STRUCTURE_TOWER]: 12,
+  [STRUCTURE_LAB]: 13,
+  [STRUCTURE_SPAWN]: 19,
+  [STRUCTURE_LINK]: 20,
+  [STRUCTURE_TERMINAL]: 21,
+  [STRUCTURE_STORAGE]: 22
+};
+
+const centralDepositPos: SimplePosition = {x: -2, y: 0};
+const BASE_ROAD_ENDS: SimplePosition[] = [
   {x: -4, y: -1},
   {x: -4, y: 2},
   {x: -2, y: -4},
@@ -124,12 +136,6 @@ const BASE_ROAD_ENDS: SimplePos[] = [
   {x: 4, y: 2},
 ];
 
-/**
- * Paths
- *
- */
-
-
 
 class OrganicBaseLayout {
   room: Room;
@@ -138,7 +144,8 @@ class OrganicBaseLayout {
   reservedControllerPositions: RoomPosition[];
   reservedSourcePositions: RoomPosition[][];
   baseCenter: RoomPosition;
-  cuts: RoomPosition[];
+  ramparts: RoomPosition[];
+  reSupplyLines: ResupplyLineMemory[];
 
   complete: boolean;
 
@@ -149,14 +156,14 @@ class OrganicBaseLayout {
     this.costMatrix  = new PathFinder.CostMatrix;
     this.reservedControllerPositions = [];
     this.reservedSourcePositions = [];
-    this.cuts = [];
+    this.ramparts = [];
+    this.reSupplyLines = [];
 
     if (!this.loadFromCache()) {
       console.log(`loading from cache failed`)
       this.complete = loadFromMemory ? this.loadFromMemory() : this.new(room);
-      if (this.complete == true) { this.cacheRoom(); }
+      if (this.complete) { this.cacheRoom(); }
     }
-
 
   }
 
@@ -181,19 +188,15 @@ class OrganicBaseLayout {
     if (!this.setBaseCenterNew(4,5)) { return false; }
     this.updateCostMatrix(BASE_LAYOUT, true);
 
-
-
-    /*
-    let arr = [];
-    for (let x = -5; x <=5; x++) {
-      for (let y = -5; y <=5; y++) {
-        arr.push(new RoomPosition(this.baseCenter.x + x, this.baseCenter.y + y, room.name));
-      }
-    }
-
-    this.cuts = getMincut(room.name, arr, this.costMatrix);
-
+    /**
+     *  Resupply Lines
      */
+
+    this.setResupplyLines(); //todo: test
+
+
+    this.ramparts = this.findBestRampartLayout();
+
 
     // todo: find paths to controller, sources & mineral, reSupplyPaths
     // todo: save everything
@@ -201,9 +204,9 @@ class OrganicBaseLayout {
     return true;
   }
 
-  addReservedPositionArrToCostMatrix(costMatrix: CostMatrix, positions: RoomPosition[]): CostMatrix {
+  addReservedPositionArrToCostMatrix(costMatrix: CostMatrix, positions: RoomPosition[], cost: number): CostMatrix {
     positions.forEach( pos => {
-      costMatrix.set(pos.x, pos.y, 0);
+      costMatrix.set(pos.x, pos.y, cost);
     });
     return costMatrix;
   }
@@ -211,15 +214,106 @@ class OrganicBaseLayout {
   setBaseCenterNew(minBaseRadius: number, optimalBaseRadius: number): boolean {
 
     let reverseCostMatrix = getCostMatrix(this.room, true);
-    reverseCostMatrix = this.addReservedPositionArrToCostMatrix(reverseCostMatrix, this.reservedControllerPositions);
-    this.reservedSourcePositions.forEach( arr => { reverseCostMatrix = this.addReservedPositionArrToCostMatrix(reverseCostMatrix, arr); });
+    this.addReservedPositionArrToCostMatrix(reverseCostMatrix, this.reservedControllerPositions, 0);
+    this.reservedSourcePositions.forEach( arr => { this.addReservedPositionArrToCostMatrix(reverseCostMatrix, arr, 0); });
 
     let distanceTransformCostMatrix = distanceTransform(this.room, reverseCostMatrix);
     let floodFilledCostMatrix = floodFill(this.room, this.reservedControllerPositions);
 
     this.baseCenter = this.findBestBaseCenter(floodFilledCostMatrix, distanceTransformCostMatrix, minBaseRadius, optimalBaseRadius);
 
-    return (this.baseCenter.x != 0) ? true : false;
+    return this.baseCenter.x != 0;
+  }
+
+  setResupplyLines(): boolean {
+
+    const requiredBuildingSpots = 60;
+    let foundBuildingSpots: SimplePosition[] = [];
+
+
+    // initial setup
+    BASE_ROAD_ENDS.forEach( endPoint => {
+
+      this.reSupplyLines.push(
+        {
+          path: this.room.findPath(
+            new RoomPosition(this.baseCenter.x + centralDepositPos.x, this.baseCenter.y + centralDepositPos.y, this.room.name),
+            new RoomPosition(this.baseCenter.x + endPoint.x, this.baseCenter.y + endPoint.y, this.room.name),
+            {ignoreCreeps: true, costCallback: () => {return this.costMatrix}}
+          ),
+          reversePath: [],
+          energyStoreLocations: []
+        }
+      );
+    });
+
+    // init energyStoreLocations
+    this.reSupplyLines.forEach( line => {
+      line.path.forEach( pathStep => {
+        line.energyStoreLocations.push([]);
+      });
+    })
+
+    // fill construction spots along the lines
+    const maxSteps = 20;
+    let stepCount = 0;
+
+    while (stepCount < maxSteps && foundBuildingSpots.length < requiredBuildingSpots) {
+      for (let num in this.reSupplyLines) {
+        if (!this.reSupplyLines[num].path[stepCount]) {
+          if (!this.reSupplyLines[num].path[stepCount-1]) { continue; }
+          let lastStep = this.reSupplyLines[num].path[stepCount-1];
+          if (this.costMatrix.get(lastStep.x + lastStep.dx, lastStep.y + lastStep.dy) == 255) { continue; }
+          // add step to supplyPath
+          this.reSupplyLines[num].path.push({
+            x: lastStep.x + lastStep.dx,
+            y: lastStep.y + lastStep.dy,
+            dx: lastStep.dx,
+            dy: lastStep.dy,
+            direction: lastStep.direction
+          });
+          this.reSupplyLines[num].energyStoreLocations.push([]);
+
+          // build road on location
+          this.costMatrix.set(this.reSupplyLines[num].path[stepCount].x, this.reSupplyLines[num].path[stepCount].y, 1);
+          //todo: ensure that this doesn't run in reserved tiles;
+          //todo: make it more dynamic
+        }
+
+        let newX: number, newY: number;
+        for (let x = -1; x <= 1; x++) {
+          for (let y = -1; y <= 1; y++) {
+            if (x == this.reSupplyLines[num].path[stepCount].dx && y == this.reSupplyLines[num].path[stepCount].dy) { continue; }
+            newX = this.reSupplyLines[num].path[stepCount].x + x;
+            newY = this.reSupplyLines[num].path[stepCount].y + y;
+            if (_.filter(this.reservedControllerPositions, pos => { return pos.x == newX && pos.y == newY }).length >= 1) { continue; }
+            if (_.filter(this.reservedSourcePositions[0] || [], pos => { return pos.x == newX && pos.y == newY }).length >= 1) { continue; }
+            if (_.filter(this.reservedSourcePositions[1] || [], pos => { return pos.x == newX && pos.y == newY }).length >= 1) { continue; }
+
+            if (between(this.costMatrix.get(newX, newY), 1, 10) ) {
+              foundBuildingSpots.push({x: newX, y: newY});
+              this.costMatrix.set(newX, newY, STRUCTURE_COST_FOR_COSTMATRIX[STRUCTURE_EXTENSION]);
+              this.reSupplyLines[num].energyStoreLocations[stepCount].push({x: newX, y: newY});
+            }
+          }
+        }
+      }
+
+      stepCount ++;
+    }
+
+    return foundBuildingSpots.length >= requiredBuildingSpots;
+  }
+
+  findBestRampartLayout() {
+    let arr = [];
+    for (let x = -4; x <=4; x++) {
+      for (let y = -4; y <=4; y++) {
+        arr.push(new RoomPosition(this.baseCenter.x + x, this.baseCenter.y + y, this.room.name));
+      }
+    }
+
+    return getMincut(this.room.name, arr, this.costMatrix);
   }
 
   findBestBaseCenter(floodFilledCostMatrix: CostMatrix, distanceTransformCostMatrix: CostMatrix, minBaseRadius: number, optimalBaseRadius: number): RoomPosition {
@@ -254,7 +348,6 @@ class OrganicBaseLayout {
     return currentSpot;
   }
 
-
   loadFromMemory() {
     //todo: implement
     return false;
@@ -264,6 +357,7 @@ class OrganicBaseLayout {
     let roomCache = globalRoom(this.room.name);
     roomCache.costMatrix = this.costMatrix;
     roomCache.baseCenter = this.baseCenter;
+    roomCache.rampartLayout = this.ramparts;
   }
 
   loadFromCache(): boolean {
@@ -273,6 +367,8 @@ class OrganicBaseLayout {
 
     this.baseCenter = roomCache.baseCenter;
     this.costMatrix = roomCache.costMatrix;
+
+    this.ramparts = roomCache.rampartLayout || [];
 
     return true;
   }
@@ -295,24 +391,74 @@ class OrganicBaseLayout {
       opacity: 0.4,
     });
 
-    BASE_LAYOUT.forEach( spot => {
-      switch (spot.structure) {
-        case (STRUCTURE_ROAD): {
-          if (this.baseCenter == undefined) { return; }
-          roomVisual.rect(this.baseCenter.x + spot.x - 0.5, this.baseCenter.y + spot.y - 0.5, 1, 1, {
-            fill: 'green',
-            opacity: 0.4,
-          });
-          break;
-        }
-        default: {
+    for (let x = 0; x <= 49; x++) {
+      for (let y = 0; y <= 49; y++) {
+        switch (this.costMatrix.get(x,y)) {
+          case (STRUCTURE_COST_FOR_COSTMATRIX[STRUCTURE_ROAD]): {
+            roomVisual.rect(x - 0.4, y - 0.4, 0.8, 0.8, {
+              fill: 'grey',
+              opacity: 0.4,
+            });
+            break;
+          }
+          case (STRUCTURE_COST_FOR_COSTMATRIX[STRUCTURE_EXTENSION]): {
+            roomVisual.circle(x, y, {
+              fill: 'yellow',
+              opacity: 0.4,
+              radius: 0.25
+            });
+            break;
+          }
+          case (STRUCTURE_COST_FOR_COSTMATRIX[STRUCTURE_STORAGE]): {
+            roomVisual.rect(x - 0.3, y - 0.4, 0.6, 0.8, {
+              fill: 'yellow',
+              opacity: 0.8,
+            });
+            break;
+          }
+          case (STRUCTURE_COST_FOR_COSTMATRIX[STRUCTURE_LINK]): {
+            roomVisual.text(`♦`, x + 0.05, y + 0.25, {
+              color: 'yellow',
+              opacity: 0.8,
+              font: 0.8
+            });
+            break;
+          }
+          case (STRUCTURE_COST_FOR_COSTMATRIX[STRUCTURE_TERMINAL]): {
+            roomVisual.text(`✈`, x + 0.05, y + 0.25, {
+              color: 'white',
+              opacity: 0.8,
+              font: 0.8
+            });
+            break;
+          }
+          case (STRUCTURE_COST_FOR_COSTMATRIX[STRUCTURE_SPAWN]): {
+            roomVisual.text(`🏘️`, x + 0.05, y + 0.25, {
+              font: 0.8
+            });
+            break;
+          }
+          case (STRUCTURE_COST_FOR_COSTMATRIX[STRUCTURE_OBSERVER]): {
+            roomVisual.text(`🕵️`, x + 0.05, y + 0.25, {
+              font: 0.8
+            });
+            break;
+          }
+          case (STRUCTURE_COST_FOR_COSTMATRIX[STRUCTURE_NUKER]): {
+            roomVisual.text(`☢️`, x + 0.05, y + 0.25, {
+              font: 0.8
+            });
+            break;
+          }
+          default: {
 
+          }
         }
       }
-    });
+    }
 
 
-    this.cuts.forEach( pos => {
+    this.ramparts.forEach(pos => {
       roomVisual.rect(pos.x - 0.5, pos.y - 0.5, 1, 1, {
         fill: 'blue',
         opacity: 0.4,
@@ -335,22 +481,19 @@ class OrganicBaseLayout {
   }
 
   updateCostMatrix (structureArr: StructurePos[], relativeToBaseCenter: boolean = false) {
-
-    const ROAD_COST = 1;
-    const STRUCTURE_COST = 100;
-
     structureArr.forEach(pos => {
       if (pos.structure == STRUCTURE_CONTAINER) { return; }
       this.costMatrix.set(
         pos.x + (relativeToBaseCenter ? this.baseCenter.x : 0),
         pos.y + (relativeToBaseCenter ? this.baseCenter.y : 0),
-        pos.structure == STRUCTURE_ROAD ? ROAD_COST : STRUCTURE_COST);
+        STRUCTURE_COST_FOR_COSTMATRIX[pos.structure] || 10);
     });
   }
 }
 
-
-
+const between = (num: number, min: number, max: number): boolean => {
+  return (num > min && num < max);
+}
 
 
 export {OrganicBaseLayout}

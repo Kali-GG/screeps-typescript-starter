@@ -10,6 +10,10 @@ declare global {
     Interfaces matching on name from @types/screeps will be merged. This is how you can extend the 'built-in' interfaces from @types/screeps.
   */
   // Memory extension samples
+
+  /**
+   * Simple Position, requires x, y and optionally allows type (string)
+   */
   interface SimplePosition {
     x: number,
     y: number,
@@ -54,7 +58,21 @@ declare global {
 
   interface RoomMemory {
     avoidPositions: SimplePosition[],
-    tickTillSpawnMissions: number
+    tickTillSpawnMissions: number,
+    baseLayout?: BaseLayoutMemory
+  }
+
+  interface BaseLayoutMemory {
+    costMatrix?: CostMatrix, // todo: serialize!
+    rampartLayout?: SimplePosition[],
+    baseCenter?: SimplePosition
+    reSupplyLines?: ResupplyLineMemory[]
+  }
+
+  interface ResupplyLineMemory {
+    path: PathStep[],
+    reversePath: PathStep[],
+    energyStoreLocations: SimplePosition[][]
   }
 
   interface CreepMemory {
@@ -85,7 +103,8 @@ declare global {
     emptyEnergyReservesArr: string[],
     updateEmptyEnergyReservesArr: boolean,
     baseCenter?: RoomPosition,
-    costMatrix?: CostMatrix
+    costMatrix?: CostMatrix,
+    rampartLayout?: RoomPosition[]
   }
 
   // Syntax for adding properties to `global` (ex "global.log")
