@@ -66,7 +66,7 @@ const BASE_LAYOUT: StructurePos[] = [
   /**
    * Link
    */
-  {x: -2, y: -1, structure: STRUCTURE_LINK},
+  {x: 0, y: -1, structure: STRUCTURE_LINK},
 
   /**
    * Observer
@@ -77,7 +77,6 @@ const BASE_LAYOUT: StructurePos[] = [
    * Labs
    */
   {x: 0, y: 0, structure: STRUCTURE_LAB},
-  {x: 0, y: -1, structure: STRUCTURE_LAB},
   {x: 0, y: 1, structure: STRUCTURE_LAB},
 
   /**
@@ -181,10 +180,7 @@ class OrganicBaseLayout {
      *  Todo: Add Minerals
      */
     this.reservedControllerPositions = this.getReservedTiles(3, this.controllerPos, this.costMatrix);
-
-    room.find(FIND_SOURCES).forEach( (source, index) => {
-      this.reservedSourcePositions.push(this.getReservedTiles(1, source.pos, this.costMatrix));
-    });
+    this.sources.forEach( source => { this.reservedSourcePositions.push(this.getReservedTiles(1, source.pos, this.costMatrix)); });
 
     /**
      *  Find & set best RoomPosition for the BaseCenter
@@ -360,6 +356,7 @@ class OrganicBaseLayout {
     }
     if (bestSpot.x != 0) { this.costMatrix.set(bestSpot.x, bestSpot.y, STRUCTURE_COST_FOR_COSTMATRIX[STRUCTURE_LINK]); }
 
+    // todo: what if we do not find a spot for the link??
     // todo: save path, pos
 
   }
