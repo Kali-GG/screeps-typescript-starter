@@ -20,6 +20,12 @@ declare global {
     type?: string
   }
 
+  interface StructurePos {
+    x: number,
+    y: number,
+    structure: BuildableStructureConstant
+  }
+
   interface Memory {
     creeps: { [name: string]: CreepMemory };
     powerCreeps: { [name: string]: PowerCreepMemory };
@@ -66,7 +72,14 @@ declare global {
     costMatrix?: CostMatrix, // todo: serialize!
     rampartLayout?: SimplePosition[],
     baseCenter?: SimplePosition
-    reSupplyLines?: ResupplyLineMemory[]
+    structurePositions?: { [name: string]: SimplePosition[]},
+    ecoPosition?: { [name: string]: EcoPosition }
+  }
+
+  interface EcoPosition {
+    creepSpot: SimplePosition,
+    linkPosition?: SimplePosition
+    PathToCreepPosition: PathStep[]
   }
 
   interface ResupplyLineMemory {
@@ -105,6 +118,7 @@ declare global {
     baseCenter?: RoomPosition,
     costMatrix?: CostMatrix,
     rampartLayout?: RoomPosition[]
+    structurePositions?: { [name: string]: StructurePos[]},
   }
 
   // Syntax for adding properties to `global` (ex "global.log")

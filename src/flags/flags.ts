@@ -45,7 +45,8 @@ const processFlags = () => {
         if (Game.cpu.bucket < 9000) { return; }
         let room = Game.flags[i].room;
         if (!room) { return; }
-        let baseLayout = new OrganicBaseLayout(room);
+        if (!room.controller) { return; }
+        let baseLayout = new OrganicBaseLayout(room, room.controller);
         baseLayout.visualize();
         break;
       }
