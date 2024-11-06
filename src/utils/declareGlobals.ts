@@ -79,7 +79,7 @@ declare global {
   interface EcoPosition {
     creepSpot: SimplePosition,
     linkPosition?: SimplePosition
-    PathToCreepPosition: PathStep[]
+    pathToCreepPosition: PathStep[]
   }
 
   interface ResupplyLineMemory {
@@ -119,6 +119,7 @@ declare global {
     costMatrix?: CostMatrix,
     rampartLayout?: RoomPosition[]
     structurePositions?: { [name: string]: StructurePos[]},
+    ecoPositions?:  { [name: string]: EcoPosition }
   }
 
   // Syntax for adding properties to `global` (ex "global.log")
