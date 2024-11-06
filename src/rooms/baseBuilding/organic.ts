@@ -100,9 +100,17 @@ const BASE_LAYOUT: { [name: string]: StructurePos[] } = {
   ],
   [STRUCTURE_EXTENSION]: [],
   [STRUCTURE_LAB]: [
-    {x: 0, y: 1, structure: STRUCTURE_LAB},
+    {x: 1, y: -2, structure: STRUCTURE_LAB},
+    {x: 2, y: -1, structure: STRUCTURE_LAB},
+    {x: 2, y: -2, structure: STRUCTURE_LAB},
+    {x: 2, y: -3, structure: STRUCTURE_LAB},
+    {x: 3, y: -1, structure: STRUCTURE_LAB},
+    {x: 3, y: -2, structure: STRUCTURE_LAB},
+    {x: 3, y: -3, structure: STRUCTURE_LAB},
   ],
-  [STRUCTURE_OBSERVER]: [],
+  [STRUCTURE_OBSERVER]: [
+    {x: 0, y: 1, structure: STRUCTURE_OBSERVER},
+  ],
 }
 const BASE_LAYOUT_COMPLETE: StructurePos[] = [
   // https://screepers.github.io/screeps-tools/?share=N4IgTgxgNiBcAcAaEAjArgSygEwwOwHMBnOUMAewENs4BtUADzgCYA2ZATxYAYBfRRiwDsnFgEZ+g2MwCso2GICckkE2kBmecwkDVLACxa+utc0MguC+CtPMtOqdqM2Wmiy2Yvp5y83VfZLX0A9ncrEK1-E2EtT2jvLRkIsNkApBS4x3TfBz1pRWd45gKw4KKS3yjHOwyAsUiAt19WAJEUlqKmuDEhAJrLMQ7HNoHeouzuobz1bnklLxmggNmUsscVgeUAXWQAUwYAF128IgxyPDpHH27lTrnrO7D5ov6ePrnbx3qnz7ynFNypm+vkyf2uCjGjjkTweULmkL+oVGyU2rQ+aJhGN8xiyhVxPwCFRuAXBZkaiXeKSqfy6GnJq0pvjWf2BBkJ9nZtSK0N8SXGDSKI1cnKZaSWgvFjiRbIlKT51XhjO6sJZiv5TwRpgm4SKrIUU1MtMGJLmBpY0v1WMmIut5XuCw2yodeOmjukgJYRIhzqpPpBfpY8r+XtS6t5YvaKPNAR50Z2ICIAAdKAB3C6weh-WN0ooW7RR6SeeNEA7kMCUAi7S5gjnxo5gAC2+EoMAzV1ivHjUHwAGtq4bnFteLwgA#/building-planner
@@ -207,6 +215,7 @@ complete: boolean;
 
     this.setRampartLayout();
 
+    // todo: placement of labs, observer, nuker, factory, powerspawn, tower
     // todo: save everything
 
     return true;
@@ -230,6 +239,7 @@ complete: boolean;
     let floodFilledCostMatrix = floodFill(this.room, this.reservedControllerPositions);
 
     this.baseCenter = this.findBestBaseCenter(floodFilledCostMatrix, distanceTransformCostMatrix, minBaseRadius, optimalBaseRadius);
+    this.costMatrix.set(this.baseCenter.x, this.baseCenter.y, 255);
 
     return this.baseCenter.x != 0;
   }
