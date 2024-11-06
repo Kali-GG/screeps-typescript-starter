@@ -15,12 +15,13 @@
  * Step 6 Defense
  */
 
-import {getCostMatrix} from "./getCostMatrix";
-import {distanceTransform, visualizeDistanceTransform} from "./distanceTransform";
-import {floodFill} from "./floodFill";
+
 // @ts-ignore
 import {getMincut} from "./utils.js";
 import {globalRoom} from "../rooms";
+import {getCostMatrix} from "./getCostMatrix";
+import {distanceTransform} from "./distanceTransform";
+import {floodFill} from "./floodFill";
 
 
 
@@ -49,6 +50,7 @@ const STRUCTURE_COST_FOR_COSTMATRIX: { [name: string]: number } = {
   [STRUCTURE_LINK]: 20,
   [STRUCTURE_TERMINAL]: 21,
   [STRUCTURE_STORAGE]: 22,
+  [STRUCTURE_EXTRACTOR]: 255,
 };
 
 /**
@@ -133,7 +135,6 @@ class OrganicBaseLayout {
   reservedControllerPositions: RoomPosition[];
   reservedSourceAndMineralPositions: RoomPosition[];
   baseCenter: RoomPosition;
-  //ramparts: RoomPosition[];
   reSupplyLines: ResupplyLineMemory[];
   sourcesArr: Source[];
   mineralsArr: Mineral[];
@@ -151,14 +152,14 @@ complete: boolean;
     this.costMatrix  = new PathFinder.CostMatrix;
     this.reservedControllerPositions = [];
     this.reservedSourceAndMineralPositions = [];
-    //this.ramparts = [];
     this.reSupplyLines = []; //todo: the concept of resupply lines was discarded. can be simplified
     this.sourcesArr = room.find(FIND_SOURCES);
     this.mineralsArr = room.find(FIND_MINERALS);
     this.ecoPositions = {};
     this.structurePositions = {
       [STRUCTURE_SPAWN]: [], [STRUCTURE_STORAGE]: [], [STRUCTURE_TOWER]: [], [STRUCTURE_LINK]: [], [STRUCTURE_TERMINAL]: [], [STRUCTURE_ROAD]: [],
-      [STRUCTURE_EXTENSION]: [], [STRUCTURE_LAB]: [], [STRUCTURE_OBSERVER]: [], [STRUCTURE_RAMPART]: [], [STRUCTURE_EXTRACTOR]: []
+      [STRUCTURE_EXTENSION]: [], [STRUCTURE_LAB]: [], [STRUCTURE_OBSERVER]: [], [STRUCTURE_RAMPART]: [], [STRUCTURE_EXTRACTOR]: [],
+      [STRUCTURE_CONTAINER]: [],
     };
 
     if (!this.loadFromCache()) {
@@ -198,7 +199,7 @@ complete: boolean;
 
     this.setEconomyLayout(3, this.controller);
     this.sourcesArr.forEach(source => { this.setEconomyLayout(1, source); });
-    this.mineralsArr.forEach(mineral => { this.setEconomyLayoutMineral(1, mineral); });
+    this.mineralsArr.forEach(mineral => { this.setEconomyLayout(1, mineral); });
 
     /**
      *   Find Walls
@@ -209,9 +210,6 @@ complete: boolean;
     // todo: save everything
 
     return true;
-
-    //todo: test mining & upgraderpos (should be visualized)
-    //todo: test ramparts, should be visualized. get rid of this.ramparts if everything works
 
   }
 
@@ -316,7 +314,7 @@ complete: boolean;
     return foundBuildingSpots >= requiredBuildingSpots;
   }
 
-  setEconomyLayout(range: number, target: Structure | Source) {
+  setEconomyLayout(range: number, target: StructureController | Source | Mineral): void {
     // find path to target
     let path = this.room.findPath(
       new RoomPosition(this.baseCenter.x + CENTRAL_DEPOSIT_DELTA_POSITION.x, this.baseCenter.y + CENTRAL_DEPOSIT_DELTA_POSITION.y, this.room.name),
@@ -324,6 +322,7 @@ complete: boolean;
       {ignoreCreeps: true, range: range, costCallback: () => {return this.costMatrix}}
     );
     let workPos = path[path.length-1];
+    path.pop();
 
     // update costMatrix
     path.forEach( step => {
@@ -335,15 +334,21 @@ complete: boolean;
         this.setBaseLayoutPositions([{x: step.x, y: step.y, structure: STRUCTURE_ROAD}]);
       }
     });
-    //this.setBaseLayoutPositions([{x: workPos.x, y: workPos.y, structure: RESERVED_POS}]);
-    this.costMatrix.set(workPos.x, workPos.y, COST_RESERVED_POS)
+    this.costMatrix.set(workPos.x, workPos.y, COST_RESERVED_POS);
+
+    if (target instanceof Mineral ) {
+      this.setBaseLayoutPositions([{x: workPos.x, y: workPos.y, structure: STRUCTURE_CONTAINER}]);
+      this.setBaseLayoutPositions([{x: target.pos.x, y: target.pos.y, structure: STRUCTURE_EXTRACTOR}]);
+
+      this.ecoPositions[target.id] = {
+        creepSpot: {x: workPos.x, y: workPos.y},
+        pathToCreepPosition: path,
+      };
+      return;
+    }
 
     // find link pos
     let bestSpot: SimplePosition = {x: 0, y: 0};
-
-    if (target) {
-
-    }
 
     let bestSpotEval: number = 1000;
     let currentSpotEval: number;
@@ -371,44 +376,15 @@ complete: boolean;
     };
   }
 
-  setEconomyLayoutMineral(range: number, target: Mineral): void {
-    // find path to target
-    let path = this.room.findPath(
-      new RoomPosition(this.baseCenter.x + CENTRAL_DEPOSIT_DELTA_POSITION.x, this.baseCenter.y + CENTRAL_DEPOSIT_DELTA_POSITION.y, this.room.name),
-      target.pos,
-      {ignoreCreeps: true, range: range, costCallback: () => {return this.costMatrix}}
-    );
-    let workPos = path[path.length-1];
+  setRampartLayout(): void {
+    let arr: RoomPosition[] = [];
 
-    // update costMatrix
-    path.forEach( step => {
-      if (this.costMatrix.get(step.x, step.y) >= 10 ) {
-        // todo: this means we override a base building, react properly to it
-      }
+    for (let structurePositionsKey in this.structurePositions) {
+      if (structurePositionsKey == (STRUCTURE_CONTAINER || STRUCTURE_ROAD || STRUCTURE_EXTRACTOR || STRUCTURE_LINK)) { continue; }
 
-      if (this.costMatrix.get(step.x, step.y) > STRUCTURE_COST_FOR_COSTMATRIX[STRUCTURE_ROAD] ) {
-        this.setBaseLayoutPositions([{x: step.x, y: step.y, structure: STRUCTURE_ROAD}]);
-      }
-    });
-    this.costMatrix.set(workPos.x, workPos.y, COST_RESERVED_POS)
-
-    this.setBaseLayoutPositions([{x: workPos.x, y: workPos.y, structure: STRUCTURE_CONTAINER}]);
-    this.setBaseLayoutPositions([{x: target.pos.x, y: target.pos.y, structure: STRUCTURE_EXTRACTOR}]);
-
-    this.ecoPositions[target.id] = {
-      creepSpot: {x: workPos.x, y: workPos.y},
-      pathToCreepPosition: path,
-    };
-  }
-
-  setRampartLayout() {
-    let arr = [];
-
-    //todo: fill with actual base!
-    for (let x = -4; x <=4; x++) {
-      for (let y = -4; y <=4; y++) {
-        arr.push(new RoomPosition(this.baseCenter.x + x, this.baseCenter.y + y, this.room.name));
-      }
+      this.structurePositions[structurePositionsKey].forEach( structure => {
+        arr.push(new RoomPosition(structure.x , structure.y, this.room.name));
+      })
     }
 
     getMincut(this.room.name, arr, this.costMatrix).forEach( (pos: RoomPosition) => {
@@ -461,7 +437,6 @@ complete: boolean;
     let roomCache = globalRoom(this.room.name);
     roomCache.costMatrix = this.costMatrix;
     roomCache.baseCenter = this.baseCenter; //todo: change to simplePos - or do I even need it?
-    //roomCache.rampartLayout = this.ramparts; // todo: transfer to this.structurePositions
     roomCache.structurePositions = this.structurePositions;
     roomCache.ecoPositions = this.ecoPositions;
   }
@@ -474,8 +449,8 @@ complete: boolean;
     this.baseCenter = roomCache.baseCenter;
     this.costMatrix = roomCache.costMatrix;
 
-    //this.ramparts = roomCache.rampartLayout || [];
     if (roomCache.structurePositions) { this.structurePositions = roomCache.structurePositions; }
+    if (roomCache.ecoPositions) { this.ecoPositions = roomCache.ecoPositions; }
 
     return true;
   }
@@ -588,19 +563,8 @@ complete: boolean;
         opacity: 0.8,
         radius: 0.45,
         stroke: 'red',
-        strokeWidth: 1.0
       });
     }
-
-    /*
-    this.ramparts.forEach(pos => {
-      roomVisual.rect(pos.x - 0.5, pos.y - 0.5, 1, 1, {
-        fill: 'blue',
-        opacity: 0.4,
-      });
-    });
-
-     */
   }
 
   getReservedTiles (range: number = 3, pos: RoomPosition): RoomPosition[] {
@@ -618,13 +582,20 @@ complete: boolean;
   setBaseLayoutPositions (structureArr: StructurePos[], relativeToBaseCenter: boolean = false) {
     structureArr.forEach(pos => {
 
-      this.structurePositions[pos.structure].push({
-        x: pos.x + (relativeToBaseCenter ? this.baseCenter.x : 0),
-        y: pos.y + (relativeToBaseCenter ? this.baseCenter.y : 0),
-        structure: pos.structure
-      });
+      try {
+        this.structurePositions[pos.structure].push({
+          x: pos.x + (relativeToBaseCenter ? this.baseCenter.x : 0),
+          y: pos.y + (relativeToBaseCenter ? this.baseCenter.y : 0),
+          structure: pos.structure
+        });
+      }
+      catch (e) {
+        console.log(pos.structure)
+      }
+
 
       if (pos.structure == STRUCTURE_CONTAINER) { return; }
+
       //todo return if costmatrix.get == 255
 
 
