@@ -42,14 +42,18 @@ import {floodFill} from "./floodFill";
 const COST_RESERVED_POS = 30;
 const STRUCTURE_COST_FOR_COSTMATRIX: { [name: string]: number } = {
   [STRUCTURE_ROAD]: 1,
-  [STRUCTURE_OBSERVER]: 10,
+  [STRUCTURE_OBSERVER]: 10, // observer should stay the lowest rated building, as this value is used in logic to check if a position is still free to build
   [STRUCTURE_EXTENSION]: 11,
   [STRUCTURE_TOWER]: 12,
-  [STRUCTURE_LAB]: 13,
+  [STRUCTURE_FACTORY]: 13,
+  [STRUCTURE_NUKER]: 14,
+  [STRUCTURE_POWER_SPAWN]: 15,
+  [STRUCTURE_LAB]: 16,
   [STRUCTURE_SPAWN]: 19,
   [STRUCTURE_LINK]: 20,
   [STRUCTURE_TERMINAL]: 21,
   [STRUCTURE_STORAGE]: 22,
+
   [STRUCTURE_EXTRACTOR]: 255,
 };
 
@@ -108,8 +112,15 @@ const BASE_LAYOUT: { [name: string]: StructurePos[] } = {
     {x: 3, y: -2, structure: STRUCTURE_LAB},
     {x: 3, y: -3, structure: STRUCTURE_LAB},
   ],
-  [STRUCTURE_OBSERVER]: [
-    {x: 0, y: 1, structure: STRUCTURE_OBSERVER},
+  [STRUCTURE_OBSERVER]: [],
+  [STRUCTURE_POWER_SPAWN]: [
+    {x: 0, y: 1, structure: STRUCTURE_POWER_SPAWN},
+  ],
+  [STRUCTURE_NUKER]: [
+    {x: 2, y: 2, structure: STRUCTURE_NUKER},
+  ],
+  [STRUCTURE_FACTORY]: [
+    {x: 1, y: 3, structure: STRUCTURE_FACTORY},
   ],
 }
 const BASE_LAYOUT_COMPLETE: StructurePos[] = [
@@ -123,6 +134,9 @@ const BASE_LAYOUT_COMPLETE: StructurePos[] = [
   ...BASE_LAYOUT[STRUCTURE_LINK],
   ...BASE_LAYOUT[STRUCTURE_TERMINAL],
   ...BASE_LAYOUT[STRUCTURE_STORAGE],
+  ...BASE_LAYOUT[STRUCTURE_POWER_SPAWN],
+  ...BASE_LAYOUT[STRUCTURE_NUKER],
+  ...BASE_LAYOUT[STRUCTURE_FACTORY],
 ];
 
 const CENTRAL_DEPOSIT_DELTA_POSITION: SimplePosition = {x: -2, y: 0};
@@ -167,7 +181,7 @@ complete: boolean;
     this.structurePositions = {
       [STRUCTURE_SPAWN]: [], [STRUCTURE_STORAGE]: [], [STRUCTURE_TOWER]: [], [STRUCTURE_LINK]: [], [STRUCTURE_TERMINAL]: [], [STRUCTURE_ROAD]: [],
       [STRUCTURE_EXTENSION]: [], [STRUCTURE_LAB]: [], [STRUCTURE_OBSERVER]: [], [STRUCTURE_RAMPART]: [], [STRUCTURE_EXTRACTOR]: [],
-      [STRUCTURE_CONTAINER]: [],
+      [STRUCTURE_CONTAINER]: [], [STRUCTURE_POWER_SPAWN]: [], [STRUCTURE_NUKER]: [], [STRUCTURE_FACTORY]: [],
     };
 
     if (!this.loadFromCache()) {
@@ -215,7 +229,7 @@ complete: boolean;
 
     this.setRampartLayout();
 
-    // todo: placement of labs, observer, nuker, factory, powerspawn, tower
+    // todo: placement of observer, tower
     // todo: save everything
 
     return true;
@@ -273,7 +287,7 @@ complete: boolean;
         if (!this.reSupplyLines[num].path[stepCount]) {
           if (!this.reSupplyLines[num].path[stepCount-1]) { continue; }
           let lastStep = this.reSupplyLines[num].path[stepCount-1];
-          if (this.costMatrix.get(lastStep.x + lastStep.dx, lastStep.y + lastStep.dy) == 255) { continue; }
+          if (!this.isValidBuildingSpot(lastStep.x + lastStep.dx, lastStep.y + lastStep.dy)) { continue; }
           // add step to supplyPath
           this.reSupplyLines[num].path.push({
             x: lastStep.x + lastStep.dx,
@@ -289,9 +303,6 @@ complete: boolean;
             y: this.reSupplyLines[num].path[stepCount].y,
             structure: STRUCTURE_ROAD
           }]);
-
-          //todo: ensure that this doesn't run in reserved tiles;
-          //todo: make it more dynamic
         }
 
         //find & set new extension building spots
@@ -306,7 +317,7 @@ complete: boolean;
             if (_.filter(this.reservedControllerPositions, pos => { return pos.x == newX && pos.y == newY }).length >= 1) { continue; }
             if (_.filter(this.reservedSourceAndMineralPositions, pos => { return pos.x == newX && pos.y == newY }).length >= 1) { continue; }
 
-            if (between(this.costMatrix.get(newX, newY), 1, 10) ) {
+            if (this.isValidBuildingSpot(newX, newY)) {
               foundBuildingSpots ++;
               this.setBaseLayoutPositions([{
                 x: newX,
@@ -340,7 +351,7 @@ complete: boolean;
         // todo: this means we override a base building, react properly to it
       }
 
-      if (this.costMatrix.get(step.x, step.y) > STRUCTURE_COST_FOR_COSTMATRIX[STRUCTURE_ROAD] ) {
+      if (this.isValidBuildingSpot(step.x, step.y)) {
         this.setBaseLayoutPositions([{x: step.x, y: step.y, structure: STRUCTURE_ROAD}]);
       }
     });
@@ -365,7 +376,7 @@ complete: boolean;
 
     for (let x = -1; x <= 1; x++) {
       for (let y = -1; y <= 1; y++) {
-        if (!between(this.costMatrix.get(workPos.x + x, workPos.y + y), 1, 10 )) { continue; }
+        if (!this.isValidBuildingSpot(workPos.x + x, workPos.y + y)) { continue; }
         currentSpotEval = Math.abs(workPos.x + x - this.baseCenter.x) + Math.abs(workPos.y + y - this.baseCenter.y);
         if (currentSpotEval < bestSpotEval) {
           bestSpotEval = currentSpotEval;
@@ -560,6 +571,18 @@ complete: boolean;
             });
             break;
           }
+          case (STRUCTURE_POWER_SPAWN): {
+            roomVisual.text(`🏙️️`, structurePos.x + 0.05, structurePos.y + 0.25, {
+              font: 0.8
+            });
+            break;
+          }
+          case (STRUCTURE_FACTORY): {
+            roomVisual.text(`⚙️️`, structurePos.x + 0.05, structurePos.y + 0.25, {
+              font: 0.8
+            });
+            break;
+          }
           default: {
 
           }
@@ -603,17 +626,17 @@ complete: boolean;
         console.log(pos.structure)
       }
 
-
       if (pos.structure == STRUCTURE_CONTAINER) { return; }
-
-      //todo return if costmatrix.get == 255
-
 
       this.costMatrix.set(
         pos.x + (relativeToBaseCenter ? this.baseCenter.x : 0),
         pos.y + (relativeToBaseCenter ? this.baseCenter.y : 0),
         STRUCTURE_COST_FOR_COSTMATRIX[pos.structure] || 9);
     });
+  }
+
+  isValidBuildingSpot(x: number, y: number): boolean {
+    return between(this.costMatrix.get(x, y), 1, STRUCTURE_COST_FOR_COSTMATRIX[STRUCTURE_OBSERVER]);
   }
 }
 
