@@ -100,7 +100,15 @@ const BASE_LAYOUT: { [name: string]: StructurePos[] } = {
   ],
   [STRUCTURE_EXTENSION]: [],
   [STRUCTURE_LAB]: [
+    {x: 1, y: 3, structure: STRUCTURE_LAB},
     {x: 2, y: 2, structure: STRUCTURE_LAB},
+    {x: 2, y: 3, structure: STRUCTURE_LAB},
+    {x: 1, y: -3, structure: STRUCTURE_LAB},
+    {x: 2, y: -3, structure: STRUCTURE_LAB},
+    {x: 2, y: -2, structure: STRUCTURE_LAB},
+    {x: -2, y: 2, structure: STRUCTURE_LAB},
+    {x: -2, y: 3, structure: STRUCTURE_LAB},
+    {x: -1, y: 3, structure: STRUCTURE_LAB},
 
   ],
   [STRUCTURE_OBSERVER]: [
