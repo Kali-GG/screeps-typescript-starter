@@ -64,7 +64,7 @@ const BASE_LAYOUT: { [name: string]: StructurePos[] } = {
   [STRUCTURE_SPAWN]: [
     {x: 1, y: 0, structure: STRUCTURE_SPAWN},
     {x: 1, y: 1, structure: STRUCTURE_SPAWN},
-    {x: 0, y: 2, structure: STRUCTURE_SPAWN},
+    {x: 0, y: 1, structure: STRUCTURE_SPAWN},
   ],
   [STRUCTURE_STORAGE]: [
     {x: -1, y: 0, structure: STRUCTURE_STORAGE}
@@ -114,7 +114,7 @@ const BASE_LAYOUT: { [name: string]: StructurePos[] } = {
   ],
   [STRUCTURE_OBSERVER]: [],
   [STRUCTURE_POWER_SPAWN]: [
-    {x: 0, y: 1, structure: STRUCTURE_POWER_SPAWN},
+    {x: 0, y: 2, structure: STRUCTURE_POWER_SPAWN},
   ],
   [STRUCTURE_NUKER]: [
     {x: 2, y: 2, structure: STRUCTURE_NUKER},
@@ -408,6 +408,19 @@ complete: boolean;
       })
     }
 
+    let result = getMincut(this.room.name, arr, this.costMatrix);
+
+    if (result.cuts && result.cuts.length) {
+      result.cuts.forEach( (pos: RoomPosition) => {
+        this.structurePositions[STRUCTURE_RAMPART].push({
+          x: pos.x,
+          y: pos.y,
+          structure: STRUCTURE_RAMPART
+        });
+      });
+    }
+
+    /*
     getMincut(this.room.name, arr, this.costMatrix).forEach( (pos: RoomPosition) => {
       this.structurePositions[STRUCTURE_RAMPART].push({
         x: pos.x,
@@ -415,6 +428,7 @@ complete: boolean;
         structure: STRUCTURE_RAMPART
       });
     });
+     */
   }
 
   findBestBaseCenter(floodFilledCostMatrix: CostMatrix, distanceTransformCostMatrix: CostMatrix, minBaseRadius: number, optimalBaseRadius: number): RoomPosition {

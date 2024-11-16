@@ -314,7 +314,8 @@ module.exports = {
       const cuts = result.cuts;
 
       if (cuts.length) {
-        return cuts;
+        //return cuts;
+        return result;
       }
       getBlockingFlow(sourceVertices, exit, capacityMap, levels);
       i++;
@@ -322,7 +323,8 @@ module.exports = {
     //console.log("iteration ends.");
     //return ERR_NOT_FOUND;
     // Flo: we just expect an array and return an empty one if nothing else
-    return [];
+    //return [];
+    return {};
   },
 };
 

@@ -65,6 +65,7 @@ declare global {
   interface RoomMemory {
     avoidPositions: SimplePosition[],
     tickTillSpawnMissions: number,
+    usedLayout?: string,
     baseLayout?: BaseLayoutMemory
   }
 
@@ -119,7 +120,8 @@ declare global {
     costMatrix?: CostMatrix,
     rampartLayout?: RoomPosition[]
     structurePositions?: { [name: string]: StructurePos[]},
-    ecoPositions?:  { [name: string]: EcoPosition }
+    ecoPositions?:  { [name: string]: EcoPosition },
+    type?: string
   }
 
   // Syntax for adding properties to `global` (ex "global.log")
