@@ -65,7 +65,6 @@ declare global {
   interface RoomMemory {
     avoidPositions: SimplePosition[],
     tickTillSpawnMissions: number,
-    usedLayout?: string,
     baseLayout?: BaseLayoutMemory
   }
 
@@ -74,7 +73,8 @@ declare global {
     rampartLayout?: SimplePosition[],
     baseCenter?: SimplePosition
     structurePositions?: { [name: string]: SimplePosition[]},
-    ecoPosition?: { [name: string]: EcoPosition }
+    ecoPosition?: { [name: string]: EcoPosition },
+    usedLayout?: string
   }
 
   interface EcoPosition {

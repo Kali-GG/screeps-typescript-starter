@@ -23,8 +23,6 @@ import {getCostMatrix} from "./getCostMatrix";
 import {distanceTransform} from "./distanceTransform";
 import {floodFill} from "./floodFill";
 
-
-
 /*
  * getCostMatrix()
  * iterate through flags & set costMatrix
@@ -164,10 +162,9 @@ class OrganicBaseLayout {
   ecoPositions:  { [name: string]: EcoPosition };
   structurePositions: { [name: string]: StructurePos[]};
   controller: StructureController;
+  complete: boolean;
 
-complete: boolean;
-
-  constructor (room: Room, controller: StructureController, loadFromMemory: boolean = false) {
+  constructor (room: Room, controller: StructureController, loadFromMemory: boolean = false, saveToMemory: boolean = false) {
     this.complete = false;
     this.room = room;
     this.controller = controller;
@@ -190,6 +187,8 @@ complete: boolean;
       this.complete = loadFromMemory ? this.loadFromMemory() : this.new(room);
       if (this.complete) { this.cacheRoom(); }
     }
+
+    if (saveToMemory == true) { this.saveToMemory(); }
   }
 
   new(room: Room): boolean {
@@ -494,20 +493,12 @@ complete: boolean;
   }
 
   saveToMemory() {
-    /**
-     * data to save on Room:
-     *  BaseCenter
-     *  List of all structure placement spots
-     *
-     *  UpgraderSpot, UpgraderLinkSpot, PathFromSpawn
-     *  []: MiningSpot, MiningLinkSpot, PathFromSpawn, SourceId
-     *  MineralMiningSpot, PathFromSpawn, MineralId ? ExtractorId?
-     *  Defense ?
-     */
-    let baseLayoutMemory: BaseLayoutMemory = {
+    this.room.memory.baseLayout = {
       costMatrix: this.costMatrix,
       baseCenter: this.baseCenter,
-      ecoPosition: {}
+      structurePositions: this.structurePositions,
+      ecoPosition: this.ecoPositions,
+      usedLayout: BASE_TYPE,
     }
   }
 
