@@ -17,11 +17,11 @@
 
 
 // @ts-ignore
-import {getMincut} from "./utils.js";
+import {getMincut} from "./baseBuildingUtils/utils.js";
 import {globalRoom} from "../rooms";
 import {getCostMatrix} from "./getCostMatrix";
-import {distanceTransform} from "./distanceTransform";
-import {floodFill} from "./floodFill";
+import {distanceTransform} from "./baseBuildingUtils/distanceTransform";
+import {floodFill} from "./baseBuildingUtils/floodFill";
 
 
 

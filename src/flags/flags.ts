@@ -1,7 +1,7 @@
 
 import {visualizeBaseBuilding} from "../rooms/visualizeBaseBuilding";
-import {distanceTransform, visualizeDistanceTransform} from "../rooms/baseBuilding/distanceTransform";
-import {floodFill, visualizeFloodFill} from "../rooms/baseBuilding/floodFill";
+import {distanceTransform, visualizeDistanceTransform} from "../rooms/baseBuilding/baseBuildingUtils/distanceTransform";
+import {floodFill, visualizeFloodFill} from "../rooms/baseBuilding/baseBuildingUtils/floodFill";
 import {BunkerBaseLayout} from "../rooms/baseBuilding/bunker";
 import {OrganicBaseLayout as OrganicBaseLayout3x4} from "../rooms/baseBuilding/organic_3x4";
 import {OrganicBaseLayout as OrganicBaseLayout5x5} from "../rooms/baseBuilding/organic_5x5/organic_5x5";

@@ -16,10 +16,10 @@
  */
 
 import {getCostMatrix} from "./getCostMatrix";
-import {distanceTransform, visualizeDistanceTransform} from "./distanceTransform";
-import {floodFill} from "./floodFill";
+import {distanceTransform, visualizeDistanceTransform} from "./baseBuildingUtils/distanceTransform";
+import {floodFill} from "./baseBuildingUtils/floodFill";
 // @ts-ignore
-import {getMincut} from "./utils.js";
+import {getMincut} from "./baseBuildingUtils/utils.js";
 
 /**
  * getCostMatrix()
