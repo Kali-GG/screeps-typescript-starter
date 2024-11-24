@@ -35,7 +35,6 @@ const buildBase =  (room: Room): void => {
 
     return false;
   });
-
 }
 
 const structureNeedsToBeBuilt = (filteredStructuresArr: Structure[], type: BuildableStructureConstant, controller: StructureController) => {
