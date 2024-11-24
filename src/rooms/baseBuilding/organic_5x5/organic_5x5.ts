@@ -17,11 +17,11 @@
 
 
 // @ts-ignore
-import {getMincut} from "./utils.js";
-import {globalRoom} from "../rooms";
-import {getCostMatrix} from "./getCostMatrix";
-import {distanceTransform} from "./distanceTransform";
-import {floodFill} from "./floodFill";
+import {getMincut} from "../utils.js";
+import {globalRoom} from "../../rooms";
+import {getCostMatrix} from "../getCostMatrix";
+import {distanceTransform} from "../distanceTransform";
+import {floodFill} from "../floodFill";
 
 /*
  * getCostMatrix()
@@ -69,7 +69,7 @@ const BASE_LAYOUT: { [name: string]: StructurePos[] } = {
   ],
   [STRUCTURE_TOWER]: [],
   [STRUCTURE_LINK]: [
-    {x: 1, y: 0, structure: STRUCTURE_LINK},
+    {x: 0, y: -1, structure: STRUCTURE_LINK},
   ],
   [STRUCTURE_TERMINAL]: [
     {x: 0, y: 1, structure: STRUCTURE_TERMINAL},

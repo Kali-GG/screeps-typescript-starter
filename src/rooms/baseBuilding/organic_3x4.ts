@@ -501,11 +501,14 @@ complete: boolean;
      *  MineralMiningSpot, PathFromSpawn, MineralId ? ExtractorId?
      *  Defense ?
      */
+    /*
     let baseLayoutMemory: BaseLayoutMemory = {
       costMatrix: this.costMatrix,
       baseCenter: this.baseCenter,
       ecoPosition: {}
     }
+
+     */
   }
 
   visualize() {

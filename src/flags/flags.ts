@@ -4,7 +4,7 @@ import {distanceTransform, visualizeDistanceTransform} from "../rooms/baseBuildi
 import {floodFill, visualizeFloodFill} from "../rooms/baseBuilding/floodFill";
 import {BunkerBaseLayout} from "../rooms/baseBuilding/bunker";
 import {OrganicBaseLayout as OrganicBaseLayout3x4} from "../rooms/baseBuilding/organic_3x4";
-import {OrganicBaseLayout as OrganicBaseLayout5x5} from "../rooms/baseBuilding/organic_5x5";
+import {OrganicBaseLayout as OrganicBaseLayout5x5} from "../rooms/baseBuilding/organic_5x5/organic_5x5";
 
 const processFlags = () => {
   for (let i in Game.flags) {
@@ -58,6 +58,14 @@ const processFlags = () => {
         if (!room.controller) { return; }
         let baseLayout = new OrganicBaseLayout5x5(room, room.controller);
         baseLayout.visualize();
+        break;
+      }
+      case 'setOrganicBase5x5': {
+        if (Game.cpu.bucket < 9000) { return; }
+        let room = Game.flags[i].room;
+        if (!room) { return; }
+        if (!room.controller) { return; }
+        let baseLayout = new OrganicBaseLayout5x5(room, room.controller, false, true);
         break;
       }
       default: {

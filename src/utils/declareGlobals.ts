@@ -69,12 +69,11 @@ declare global {
   }
 
   interface BaseLayoutMemory {
-    costMatrix?: CostMatrix, // todo: serialize!
-    rampartLayout?: SimplePosition[],
-    baseCenter?: SimplePosition
-    structurePositions?: { [name: string]: SimplePosition[]},
-    ecoPosition?: { [name: string]: EcoPosition },
-    usedLayout?: string
+    costMatrix: CostMatrix, // todo: serialize!
+    baseCenter: SimplePosition
+    structurePositions: { [name: string]: SimplePosition[]},
+    ecoPosition: { [name: string]: EcoPosition },
+    usedLayout: string
   }
 
   interface EcoPosition {
